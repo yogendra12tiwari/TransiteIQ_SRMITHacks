@@ -13,12 +13,17 @@ export const Stop = z.object({
 });
 export type Stop = z.infer<typeof Stop>;
 
+export const PolylineCoordinate = z.union([
+  z.tuple([z.number(), z.number()]),
+  z.object({ lat: z.number(), lng: z.number() }).transform((p) => [p.lat, p.lng] as [number, number]),
+]);
+
 export const Route = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   color: z.string().min(1),
   stopIds: z.array(z.string().min(1)).min(2),
-  polyline: z.array(z.tuple([z.number(), z.number()])).min(2),
+  polyline: z.array(PolylineCoordinate).min(2),
   headwayMin: z.object({
     peak: z.number().positive(),
     offpeak: z.number().positive(),

@@ -1,10 +1,6 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isOperator() {
-      return request.auth != null && request.auth.token.role == "operator";
-    }
-
     // Static network data: public read, strictly immutable by clients
     match /stops/{id} {
       allow read: if true;

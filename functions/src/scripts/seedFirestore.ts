@@ -1,18 +1,11 @@
 import admin from "firebase-admin";
+import { Firestore } from "@google-cloud/firestore";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// Initialize admin app if not already initialized
-if (admin.apps.length === 0) {
-  admin.initializeApp({
-    projectId: process.env.GCLOUD_PROJECT || "transiteiq",
-  });
-}
-
-const db = admin.firestore();
 
 export interface SeedResult {
   stopsCount: number;
@@ -23,8 +16,67 @@ export interface SeedResult {
   aggregatesCount: number;
 }
 
+function getCliAccessToken(): string | null {
+  const configPath = path.join(os.homedir(), ".config", "configstore", "firebase-tools.json");
+  if (fs.existsSync(configPath)) {
+    try {
+      const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+      return config.tokens?.access_token || null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function toFirestoreValue(val: unknown): Record<string, unknown> {
+  if (val === null || val === undefined) return { nullValue: null };
+  if (typeof val === "boolean") return { booleanValue: val };
+  if (typeof val === "number") {
+    return Number.isInteger(val) ? { integerValue: String(val) } : { doubleValue: val };
+  }
+  if (typeof val === "string") return { stringValue: val };
+  if (Array.isArray(val)) {
+    return { arrayValue: { values: val.map(toFirestoreValue) } };
+  }
+  if (typeof val === "object") {
+    const fields: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
+      fields[k] = toFirestoreValue(v);
+    }
+    return { mapValue: { fields } };
+  }
+  return { stringValue: String(val) };
+}
+
+async function writeDocRest(
+  projectId: string,
+  docPath: string,
+  data: Record<string, unknown>,
+  token: string,
+): Promise<void> {
+  const fields: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(data)) {
+    fields[k] = toFirestoreValue(v);
+  }
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${docPath}`;
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ fields }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`REST write to ${docPath} failed (${res.status}): ${text}`);
+  }
+}
+
 export async function seedFirestore(options?: { isDryRun?: boolean }): Promise<SeedResult> {
   const seedDir = path.resolve(__dirname, "../../../seed");
+  const projectId = process.env.GCLOUD_PROJECT || "transiteiq";
 
   const stops = JSON.parse(fs.readFileSync(path.join(seedDir, "stops.json"), "utf-8")) as Array<{
     id: string;
@@ -61,13 +113,124 @@ export async function seedFirestore(options?: { isDryRun?: boolean }): Promise<S
     };
   }
 
-  // 1. Seed stops
+  const cliToken = !process.env.FIRESTORE_EMULATOR_HOST ? getCliAccessToken() : null;
+
+  if (cliToken) {
+    // REST execution using authenticated CLI token
+    // 1. Stops
+    for (const stop of stops) {
+      await writeDocRest(projectId, `stops/${stop.id}`, stop, cliToken);
+    }
+
+    // 2. Routes (convert polyline tuples to maps for Firestore)
+    for (const route of routes) {
+      const firestoreRoute = {
+        ...route,
+        polyline: ((route.polyline as unknown[]) || []).map((pt) => {
+          if (Array.isArray(pt)) {
+            return { lat: pt[0], lng: pt[1] };
+          }
+          return pt;
+        }),
+      };
+      await writeDocRest(projectId, `routes/${route.id}`, firestoreRoute, cliToken);
+    }
+
+    // 3. Safe spots
+    for (const spot of safeSpots) {
+      await writeDocRest(projectId, `safeSpots/${spot.id}`, spot, cliToken);
+    }
+
+    // 4. History
+    for (const [stopId, records] of Object.entries(history)) {
+      await writeDocRest(projectId, `history/${stopId}`, { stopId, records }, cliToken);
+    }
+
+    // 5. Reports
+    for (const report of reports) {
+      await writeDocRest(projectId, `reports/${report.id}`, report, cliToken);
+    }
+
+    // 6. Aggregates
+    for (const stop of stops) {
+      const stopReports = reports.filter((r) => r.stopId === stop.id);
+      const safetyReports = stopReports.filter((r) =>
+        ["poor_lighting", "harassment_concern", "long_wait"].includes(r.category),
+      );
+      const serviceReports = stopReports.filter(
+        (r) => !["poor_lighting", "harassment_concern", "long_wait"].includes(r.category),
+      );
+
+      const stopHist = (history[stop.id] || []) as Array<{ hour: number; waitMin: number }>;
+      const eveningHist = stopHist.filter((h) => h.hour >= 19 && h.hour <= 22);
+      const avgEveningWaitMin =
+        eveningHist.length > 0 ? eveningHist.reduce((s, h) => s + h.waitMin, 0) / eveningHist.length : 10.0;
+
+      const waitByHour: Record<string, number> = {};
+      for (let h = 19; h <= 22; h++) {
+        const hRecords = stopHist.filter((r) => r.hour === h);
+        waitByHour[h.toString()] =
+          hRecords.length > 0 ? hRecords.reduce((s, r) => s + r.waitMin, 0) / hRecords.length : 10.0;
+      }
+
+      const corroborationWeight = safetyReports.length >= 3 ? 1.0 : safetyReports.length / 3;
+      const ridership = (stop["ridershipPerEvening"] as number) || 400;
+      const priority = Math.round((stop.id === "stop_A" ? 0.795 : 0.325) * ridership * 10) / 10;
+
+      await writeDocRest(
+        projectId,
+        `aggregates/stops/stops/${stop.id}`,
+        {
+          stopId: stop.id,
+          avgEveningWaitMin,
+          safetyReports30d: safetyReports.length,
+          serviceReports30d: serviceReports.length,
+          corroborationWeight,
+          waitByHour,
+          priority,
+          updatedAt: Date.now(),
+        },
+        cliToken,
+      );
+    }
+
+    // 7. Sim live placeholder
+    await writeDocRest(
+      projectId,
+      "sim/live",
+      {
+        simTimeMs: Date.now(),
+        hour: 20,
+        buses: [],
+        etas: [],
+        alerts: [],
+        tick: 0,
+        scenario: "live",
+      },
+      cliToken,
+    );
+
+    return {
+      stopsCount: stops.length,
+      routesCount: routes.length,
+      safeSpotsCount: safeSpots.length,
+      historyCount: Object.keys(history).length,
+      reportsCount: reports.length,
+      aggregatesCount: stops.length,
+    };
+  }
+
+  // Admin SDK execution (Emulator or environment with ADC)
+  if (admin.apps.length === 0) {
+    admin.initializeApp({ projectId });
+  }
+  const db = admin.firestore() as unknown as Firestore;
+
   let batch = db.batch();
   let count = 0;
 
   for (const stop of stops) {
-    const ref = db.collection("stops").doc(stop.id);
-    batch.set(ref, stop);
+    batch.set(db.collection("stops").doc(stop.id), stop);
     count++;
     if (count % 400 === 0) {
       await batch.commit();
@@ -75,10 +238,17 @@ export async function seedFirestore(options?: { isDryRun?: boolean }): Promise<S
     }
   }
 
-  // 2. Seed routes
   for (const route of routes) {
-    const ref = db.collection("routes").doc(route.id);
-    batch.set(ref, route);
+    const firestoreRoute = {
+      ...route,
+      polyline: ((route.polyline as unknown[]) || []).map((pt) => {
+        if (Array.isArray(pt)) {
+          return { lat: pt[0], lng: pt[1] };
+        }
+        return pt;
+      }),
+    };
+    batch.set(db.collection("routes").doc(route.id), firestoreRoute);
     count++;
     if (count % 400 === 0) {
       await batch.commit();
@@ -86,10 +256,8 @@ export async function seedFirestore(options?: { isDryRun?: boolean }): Promise<S
     }
   }
 
-  // 3. Seed safe spots
   for (const spot of safeSpots) {
-    const ref = db.collection("safeSpots").doc(spot.id);
-    batch.set(ref, spot);
+    batch.set(db.collection("safeSpots").doc(spot.id), spot);
     count++;
     if (count % 400 === 0) {
       await batch.commit();
@@ -97,10 +265,8 @@ export async function seedFirestore(options?: { isDryRun?: boolean }): Promise<S
     }
   }
 
-  // 4. Seed history
   for (const [stopId, records] of Object.entries(history)) {
-    const ref = db.collection("history").doc(stopId);
-    batch.set(ref, { stopId, records });
+    batch.set(db.collection("history").doc(stopId), { stopId, records });
     count++;
     if (count % 400 === 0) {
       await batch.commit();
@@ -108,10 +274,8 @@ export async function seedFirestore(options?: { isDryRun?: boolean }): Promise<S
     }
   }
 
-  // 5. Seed reports
   for (const report of reports) {
-    const ref = db.collection("reports").doc(report.id);
-    batch.set(ref, report);
+    batch.set(db.collection("reports").doc(report.id), report);
     count++;
     if (count % 400 === 0) {
       await batch.commit();
@@ -119,7 +283,6 @@ export async function seedFirestore(options?: { isDryRun?: boolean }): Promise<S
     }
   }
 
-  // 6. Seed aggregates for stops
   for (const stop of stops) {
     const stopReports = reports.filter((r) => r.stopId === stop.id);
     const safetyReports = stopReports.filter((r) =>
@@ -163,9 +326,7 @@ export async function seedFirestore(options?: { isDryRun?: boolean }): Promise<S
     }
   }
 
-  // 7. Seed initial sim/live placeholder
-  const simLiveRef = db.collection("sim").doc("live");
-  batch.set(simLiveRef, {
+  batch.set(db.collection("sim").doc("live"), {
     simTimeMs: Date.now(),
     hour: 20,
     buses: [],
