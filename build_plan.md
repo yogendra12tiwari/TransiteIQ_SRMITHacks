@@ -793,55 +793,55 @@ Deploy: `hosting`.
 #### Tasks
 
 **Trip state machine (branch `feat/trip-machine`, PR required)**
-- [ ] M5-01 Implement `tripMachine.ts`: states `PLANNED | WAITING | BOARDED | COMPLETED | EXPIRED | CANCELLED` and the transition table from PRD §9.1.
-- [ ] M5-02 `transition(trip, event, nowMs)` returns a new trip or throws `IllegalTransitionError`; events: `ENABLE_WAIT`, `BOARD`, `ARRIVE`, `CANCEL`, `EXPIRE`.
-- [ ] M5-03 `isShareable(state)` true only for `PLANNED | WAITING | BOARDED`.
-- [ ] M5-04 Exhaustive tests: every legal transition passes; every illegal transition throws; terminal states are final.
-- [ ] M5-05 Expiry rule test: `expiresAt = min(tripEnd, createdAt + 2h)`; `EXPIRE` triggers automatically when `nowMs ≥ expiresAt`.
+- [x] M5-01 Implement `tripMachine.ts`: states `PLANNED | WAITING | BOARDED | COMPLETED | EXPIRED | CANCELLED` and the transition table from PRD §9.1.
+- [x] M5-02 `transition(trip, event, nowMs)` returns a new trip or throws `IllegalTransitionError`; events: `ENABLE_WAIT`, `BOARD`, `ARRIVE`, `CANCEL`, `EXPIRE`.
+- [x] M5-03 `isShareable(state)` true only for `PLANNED | WAITING | BOARDED`.
+- [x] M5-04 Exhaustive tests: every legal transition passes; every illegal transition throws; terminal states are final.
+- [x] M5-05 Expiry rule test: `expiresAt = min(tripEnd, createdAt + 2h)`; `EXPIRE` triggers automatically when `nowMs ≥ expiresAt`.
 
 **Safe Wait engine**
-- [ ] M5-06 Implement `safewait.ts` per Decision D2: primary alert when `etaHighMin ≤ walkMin + bufferMin` (buffer 2); escalation when `etaLowMin ≤ walkMin + 1`.
-- [ ] M5-07 Idempotency: each alert fires at most once per trip; state stored in the trip's local session object.
-- [ ] M5-08 Message builder (en/hi): "Bus 23 is ~5 min away. Leave now (6 min walk)." with computed minutes; escalation text "Bus is arriving sooner than expected — leave now."
-- [ ] M5-09 Tests: fires exactly at the boundary tick; does not fire early; escalation fires only if primary unacknowledged; no double fire after re-render; handles bus becoming `LIKELY_SKIP` (switches to "next bus" suggestion).
-- [ ] M5-10 Evaluation: `eval/safeWait.ts` simulates 200 trips and reports outdoor-wait reduction vs "arrive at stop at ETA − 0"; assert ≥ 50% reduction (PRD §3.3).
+- [x] M5-06 Implement `safewait.ts` per Decision D2: primary alert when `etaHighMin ≤ walkMin + bufferMin` (buffer 2); escalation when `etaLowMin ≤ walkMin + 1`.
+- [x] M5-07 Idempotency: each alert fires at most once per trip; state stored in the trip's local session object.
+- [x] M5-08 Message builder (en/hi): "Bus 23 is ~5 min away. Leave now (6 min walk)." with computed minutes; escalation text "Bus is arriving sooner than expected — leave now."
+- [x] M5-09 Tests: fires exactly at the boundary tick; does not fire early; escalation fires only if primary unacknowledged; no double fire after re-render; handles bus becoming `LIKELY_SKIP` (switches to "next bus" suggestion).
+- [x] M5-10 Evaluation: `eval/safeWait.ts` simulates 200 trips and reports outdoor-wait reduction vs "arrive at stop at ETA − 0"; assert ≥ 50% reduction (PRD §3.3).
 
 **Safe waiting spots**
-- [ ] M5-11 Implement `nearbySafeSpots(stop, spots, radiusM=250)` sorted by distance, preferring `openLate`.
-- [ ] M5-12 `SafeSpotsList` component with distance, type icon, "open late" tag; shown before the alert fires.
-- [ ] M5-13 Tests: radius filter, sort order, late-open preference.
+- [x] M5-11 Implement `nearbySafeSpots(stop, spots, radiusM=250)` sorted by distance, preferring `openLate`.
+- [x] M5-12 `SafeSpotsList` component with distance, type icon, "open late" tag; shown before the alert fires.
+- [x] M5-13 Tests: radius filter, sort order, late-open preference.
 
 **Safe Wait UI**
-- [ ] M5-14 `RouteDetail` page: boarding stop, ETA range, walking time, risk badge with "Why?", safe spots, **Enable Safe Wait** and **Share trip** buttons.
-- [ ] M5-15 Walking-time input: default from the plan; user can adjust (stepper 1–20 min).
-- [ ] M5-16 `SafeWaitToast` in the phone frame: appears on trigger, with vibration (where supported), acknowledge and "Snooze 1 min" actions.
-- [ ] M5-17 Optional FCM web push (Q8): only if time allows; the in-app toast is the supported path.
-- [ ] M5-18 Component tests: toast text matches the computed message; acknowledge cancels the escalation; Hindi toggle changes text.
+- [x] M5-14 `RouteDetail` page: boarding stop, ETA range, walking time, risk badge with "Why?", safe spots, **Enable Safe Wait** and **Share trip** buttons.
+- [x] M5-15 Walking-time input: default from the plan; user can adjust (stepper 1–20 min).
+- [x] M5-16 `SafeWaitToast` in the phone frame: appears on trigger, with vibration (where supported), acknowledge and "Snooze 1 min" actions.
+- [x] M5-17 Optional FCM web push (Q8): only if time allows; the in-app toast is the supported path.
+- [x] M5-18 Component tests: toast text matches the computed message; acknowledge cancels the escalation; Hindi toggle changes text.
 
 **Trip sharing — functions (branch `feat/trip-share`, PR required)**
-- [ ] M5-19 `createTripShare` callable: zod-validate input, require Anonymous Auth, generate a 128-bit token via `crypto.randomBytes(16).toString("hex")`, write `trips/{token}` with `state`, `expiresAt`, `expiresAtTs`.
-- [ ] M5-20 `endTrip` callable: validates token ownership (by storing a hashed owner key on the trip; never the raw UID), sets state to `COMPLETED` or `CANCELLED`, sets `expiresAt = now`.
-- [ ] M5-21 Per-user rate limit on `createTripShare` (for example 10 per hour) through `rateLimits`.
-- [ ] M5-22 `purgeExpired` scheduled function (hourly): delete expired `trips` and `rateLimits` documents.
-- [ ] M5-23 Function tests (emulator): token length 32 hex; two calls produce different tokens; expiry capped at 2 h; end invalidates; non-owner cannot end; rate limit enforced; unauthenticated call rejected.
-- [ ] M5-24 TTL policy: configure Firestore TTL on `expiresAtTs` for `trips` and `rateLimits` (console or CLI), record steps in docs (Decision D3).
+- [x] M5-19 `createTripShare` callable: zod-validate input, require Anonymous Auth, generate a 128-bit token via `crypto.randomBytes(16).toString("hex")`, write `trips/{token}` with `state`, `expiresAt`, `expiresAtTs`.
+- [x] M5-20 `endTrip` callable: validates token ownership (by storing a hashed owner key on the trip; never the raw UID), sets state to `COMPLETED` or `CANCELLED`, sets `expiresAt = now`.
+- [x] M5-21 Per-user rate limit on `createTripShare` (for example 10 per hour) through `rateLimits`.
+- [x] M5-22 `purgeExpired` scheduled function (hourly): delete expired `trips` and `rateLimits` documents.
+- [x] M5-23 Function tests (emulator): token length 32 hex; two calls produce different tokens; expiry capped at 2 h; end invalidates; non-owner cannot end; rate limit enforced; unauthenticated call rejected.
+- [x] M5-24 TTL policy: configure Firestore TTL on `expiresAtTs` for `trips` and `rateLimits` (console or CLI), record steps in docs (Decision D3).
 
 **Trip sharing — rules (PR required)**
-- [ ] M5-25 Add rules: `trips/{token}` `get` allowed only if `resource.data.expiresAt > request.time.toMillis()`; `list` and all writes denied.
-- [ ] M5-26 Rules tests: get with valid token works; get after expiry denied; list denied; client write denied; unauthenticated visitors can `get` (receiver needs no account).
+- [x] M5-25 Add rules: `trips/{token}` `get` allowed only if `resource.data.expiresAt > request.time.toMillis()`; `list` and all writes denied.
+- [x] M5-26 Rules tests: get with valid token works; get after expiry denied; list denied; client write denied; unauthenticated visitors can `get` (receiver needs no account).
 
 **Trip share page (`/trip/:token`)**
-- [ ] M5-27 `useTrip(token)` hook: one-shot `get` of the trip, then follows `sim/live` for bus position, next stop, and ETA; handles not-found/expired.
-- [ ] M5-28 `TripShare` page: minimal read-only view with a small map, bus number, status, next stop, ETA range, and "This link expires automatically" note. No personal information, no riders' names.
-- [ ] M5-29 Friendly expired/invalid link screen (no hint whether a token ever existed).
-- [ ] M5-30 `TripSharePanel` in the rider app: create link, copy button, Web Share API where available, "Stop sharing" button (calls `endTrip`).
-- [ ] M5-31 Component tests: valid trip renders; expired shows the friendly screen; copy button copies the URL; stop sharing calls `endTrip`.
-- [ ] M5-32 Add `<meta name="robots" content="noindex">` and a `Referrer-Policy: no-referrer` header on `/trip/*` in `firebase.json`.
+- [x] M5-27 `useTrip(token)` hook: one-shot `get` of the trip, then follows `sim/live` for bus position, next stop, and ETA; handles not-found/expired.
+- [x] M5-28 `TripShare` page: minimal read-only view with a small map, bus number, status, next stop, ETA range, and "This link expires automatically" note. No personal information, no riders' names.
+- [x] M5-29 Friendly expired/invalid link screen (no hint whether a token ever existed).
+- [x] M5-30 `TripSharePanel` in the rider app: create link, copy button, Web Share API where available, "Stop sharing" button (calls `endTrip`).
+- [x] M5-31 Component tests: valid trip renders; expired shows the friendly screen; copy button copies the URL; stop sharing calls `endTrip`.
+- [x] M5-32 Add `<meta name="robots" content="noindex">` and a `Referrer-Policy: no-referrer` header on `/trip/*` in `firebase.json`.
 
 **Deploy and verify**
-- [ ] M5-33 `firebase deploy --only firestore:rules,functions,hosting`.
-- [ ] M5-34 Manual: enable Safe Wait; watch the toast fire at the right moment; open the share link in a private window; end the trip and confirm the link stops working.
-- [ ] M5-35 Manual: try listing `trips` from the console as a normal user; confirm denial.
+- [x] M5-33 `firebase deploy --only firestore:rules,functions,hosting`.
+- [x] M5-34 Manual: enable Safe Wait; watch the toast fire at the right moment; open the share link in a private window; end the trip and confirm the link stops working.
+- [x] M5-35 Manual: try listing `trips` from the console as a normal user; confirm denial.
 
 #### Files created or changed
 `shared/src/engine/{tripMachine,safewait}.ts`, `functions/src/callables/{createTripShare,endTrip}.ts`, `functions/src/scheduled/purgeExpired.ts`, `functions/src/lib/rateLimit.ts`, `firestore.rules`, `firebase.json` (headers), `web/src/pages/{RouteDetail,TripShare}.tsx`, `web/src/components/{SafeWaitToast,SafeSpotsList,TripSharePanel}.tsx`, tests.
