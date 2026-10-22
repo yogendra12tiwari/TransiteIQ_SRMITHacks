@@ -718,41 +718,41 @@ Deploy: `hosting`.
 #### Tasks
 
 **Planning engine**
-- [ ] M4-01 Define the `Place` list: 12–15 named origins/destinations in Lucknow (Lucknow University, Charbagh, Hazratganj, Gomti Nagar, Alambagh, etc.) with coordinates and nearest-stop candidates.
-- [ ] M4-02 Implement `candidateBoardingStops(origin, network, maxWalkM=600)`: stops within walking range, sorted by distance.
-- [ ] M4-03 Implement `candidateAlightStops(destination, network, maxWalkM=600)`.
-- [ ] M4-04 Implement `directOptions(boardStop, alightStop, network)`: routes serving both stops in the right order.
-- [ ] M4-05 Implement single-transfer options at designated interchange stops (Hazratganj, Aminabad, Charbagh); cap at one transfer for the MVP.
-- [ ] M4-06 Implement `walkMinutes(distanceM)` (4.5 km/h) and `pathWalkWeight(path)` (Decision D5: 0.25 lit main road, 0.7 poorly lit segment).
-- [ ] M4-07 Implement `expectedWait(boardStop, route, buses, hour)`: use the next bus's `meanMin` minus walk time (min 0), or headway/2 if no bus is tracked.
-- [ ] M4-08 Implement `exposureMinutes(option)` per PRD §9.4 with `waitWeight = 0.2 + 0.8 × score` (D5).
-- [ ] M4-09 Implement `rankOptions(options, alpha, hour)`: `cost = alpha × travelMin + (1 − alpha) × exposure`; after sunset (hour ≥ 19 or < 6) multiply the lighting and low-activity contributions by 1.25 in the risk weights.
-- [ ] M4-10 Label options: lowest `travelMin` ⇒ **Fastest**, lowest `cost` at the current alpha ⇒ **Safer**, and a **Balanced** option if distinct.
-- [ ] M4-11 Ensure Fastest ≠ Safer in the demo scenario (if they are equal, the comparison card says "Fastest is also the safest right now" instead of faking a difference).
-- [ ] M4-12 Return `RouteOption[]` validated by zod, including polylines for drawing (walk legs + bus legs).
-- [ ] M4-13 Golden tests for the demo pair: Fastest 28 / wait 14 / exposure 16 / High and Safer 32 / wait 4 / exposure 3 / Low at 20:00 with the seeded state.
-- [ ] M4-14 Property tests: with alpha = 1 the lowest-travel option wins; with alpha = 0 the lowest-exposure option wins; cost is monotonic in alpha.
-- [ ] M4-15 Tests: no option boards a stop farther than the walking limit; transfers only at interchanges; sorted output is stable.
+- [x] M4-01 Define the `Place` list: 12–15 named origins/destinations in Lucknow (Lucknow University, Charbagh, Hazratganj, Gomti Nagar, Alambagh, etc.) with coordinates and nearest-stop candidates.
+- [x] M4-02 Implement `candidateBoardingStops(origin, network, maxWalkM=600)`: stops within walking range, sorted by distance.
+- [x] M4-03 Implement `candidateAlightStops(destination, network, maxWalkM=600)`.
+- [x] M4-04 Implement `directOptions(boardStop, alightStop, network)`: routes serving both stops in the right order.
+- [x] M4-05 Implement single-transfer options at designated interchange stops (Hazratganj, Aminabad, Charbagh); cap at one transfer for the MVP.
+- [x] M4-06 Implement `walkMinutes(distanceM)` (4.5 km/h) and `pathWalkWeight(path)` (Decision D5: 0.25 lit main road, 0.7 poorly lit segment).
+- [x] M4-07 Implement `expectedWait(boardStop, route, buses, hour)`: use the next bus's `meanMin` minus walk time (min 0), or headway/2 if no bus is tracked.
+- [x] M4-08 Implement `exposureMinutes(option)` per PRD §9.4 with `waitWeight = 0.2 + 0.8 × score` (D5).
+- [x] M4-09 Implement `rankOptions(options, alpha, hour)`: `cost = alpha × travelMin + (1 − alpha) × exposure`; after sunset (hour ≥ 19 or < 6) multiply the lighting and low-activity contributions by 1.25 in the risk weights.
+- [x] M4-10 Label options: lowest `travelMin` ⇒ **Fastest**, lowest `cost` at the current alpha ⇒ **Safer**, and a **Balanced** option if distinct.
+- [x] M4-11 Ensure Fastest ≠ Safer in the demo scenario (if they are equal, the comparison card says "Fastest is also the safest right now" instead of faking a difference).
+- [x] M4-12 Return `RouteOption[]` validated by zod, including polylines for drawing (walk legs + bus legs).
+- [x] M4-13 Golden tests for the demo pair: Fastest 28 / wait 14 / exposure 16 / High and Safer 32 / wait 4 / exposure 3 / Low at 20:00 with the seeded state.
+- [x] M4-14 Property tests: with alpha = 1 the lowest-travel option wins; with alpha = 0 the lowest-exposure option wins; cost is monotonic in alpha.
+- [x] M4-15 Tests: no option boards a stop farther than the walking limit; transfers only at interchanges; sorted output is stable.
 
 **Plan UI**
-- [ ] M4-16 Plan screen: origin and destination pickers (searchable list plus "tap on map"), "Find routes" button.
-- [ ] M4-17 `RouteCompareCard`: two columns (Fastest, Safer) with travel time, wait (and where), exposure minutes, risk badge, walking time.
-- [ ] M4-18 Takeaway line generator: "{extraTravel} extra minutes saves {waitSaved} minutes of unsafe waiting" (computed, localised en/hi); hidden when the numbers do not support it.
-- [ ] M4-19 Speed-vs-safety slider (`SpeedSafetySlider`, alpha 0–1, default 0.5) that re-ranks live; announces changes to screen readers.
-- [ ] M4-20 Draw both options on the map in different colours; highlight the risky boarding stop with a ring and the safer stop with a different marker.
-- [ ] M4-21 Route cards expand to show the factor breakdown for each boarding stop via `RiskBadge`.
-- [ ] M4-22 "Select this route" stores the choice in app state (used by Safe Wait in M5).
-- [ ] M4-23 Empty/error states: no direct route, origin = destination, outside service area.
-- [ ] M4-24 Component tests: card renders both options and the takeaway; slider changes ranking; takeaway hidden when not supported; a11y labels present.
-- [ ] M4-25 Visual QA at 360, 390, 768, 1280 px widths; fix overflow.
+- [x] M4-16 Plan screen: origin and destination pickers (searchable list plus "tap on map"), "Find routes" button.
+- [x] M4-17 `RouteCompareCard`: two columns (Fastest, Safer) with travel time, wait (and where), exposure minutes, risk badge, walking time.
+- [x] M4-18 Takeaway line generator: "{extraTravel} extra minutes saves {waitSaved} minutes of unsafe waiting" (computed, localised en/hi); hidden when the numbers do not support it.
+- [x] M4-19 Speed-vs-safety slider (`SpeedSafetySlider`, alpha 0–1, default 0.5) that re-ranks live; announces changes to screen readers.
+- [x] M4-20 Draw both options on the map in different colours; highlight the risky boarding stop with a ring and the safer stop with a different marker.
+- [x] M4-21 Route cards expand to show the factor breakdown for each boarding stop via `RiskBadge`.
+- [x] M4-22 "Select this route" stores the choice in app state (used by Safe Wait in M5).
+- [x] M4-23 Empty/error states: no direct route, origin = destination, outside service area.
+- [x] M4-24 Component tests: card renders both options and the takeaway; slider changes ranking; takeaway hidden when not supported; a11y labels present.
+- [x] M4-25 Visual QA at 360, 390, 768, 1280 px widths; fix overflow.
 
 **Demo-number calibration**
-- [ ] M4-26 Tune seed attributes (Stop A/B activity, lighting, walking distances, headways) until the golden test passes **without** editing formulas; record the final values in `seed/README.md`.
-- [ ] M4-27 Add `npm run verify:demo` that prints the comparison and fails if numbers drift.
+- [x] M4-26 Tune seed attributes (Stop A/B activity, lighting, walking distances, headways) until the golden test passes **without** editing formulas; record the final values in `seed/README.md`.
+- [x] M4-27 Add `npm run verify:demo` that prints the comparison and fails if numbers drift.
 
 **Deploy and verify**
-- [ ] M4-28 `firebase deploy --only hosting`.
-- [ ] M4-29 Manual: plan Lucknow University → Gomti Nagar at 20:00; confirm the card matches the golden numbers and both routes draw.
+- [x] M4-28 `firebase deploy --only hosting`.
+- [x] M4-29 Manual: plan Lucknow University → Gomti Nagar at 20:00; confirm the card matches the golden numbers and both routes draw.
 
 #### Files created or changed
 `shared/src/engine/{exposure,ranker}.ts`, `shared/src/engine/places.ts`, `web/src/pages/Plan.tsx`, `web/src/components/{RouteCompareCard,SpeedSafetySlider}.tsx`, `seed/*` (tuning), tests.
@@ -779,8 +779,8 @@ docs: changelog v1.0.6 for m4
 Deploy: `hosting`.
 
 #### M4 exit checklist
-- [ ] All M4 tasks ticked.
-- [ ] Screenshot of the comparison card saved for the pitch deck.
+- [x] All M4 tasks ticked.
+- [x] Screenshot of the comparison card saved for the pitch deck.
 
 ---
 
