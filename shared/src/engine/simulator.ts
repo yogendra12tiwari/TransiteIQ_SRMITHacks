@@ -146,8 +146,7 @@ export function stepSim(state: SimState, dtSec: number, network: Network, hour =
       // Check if approaching any stop along the route that hasn't been dwelled at yet
       const routeStops = stopsByRoute.get(route.id) ?? [];
       const approachingStop = routeStops.find(
-        ({ stop, distM }) =>
-          Math.abs(bus.distanceAlongRouteM - distM) < 30 && lastDwellStopId !== stop.id,
+        ({ stop, distM }) => Math.abs(bus.distanceAlongRouteM - distM) < 30 && lastDwellStopId !== stop.id,
       );
 
       if (approachingStop) {

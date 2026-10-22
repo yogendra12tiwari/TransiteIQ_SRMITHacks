@@ -39,7 +39,7 @@ const sampleStops: Stop[] = [
     lat: 26.845,
     lng: 80.935,
     activity: 0.6,
-    lighting: "adequate",
+    lighting: "moderate",
     ridershipPerEvening: 300,
     skipRate: 0.1,
     safeSpotIds: [],
