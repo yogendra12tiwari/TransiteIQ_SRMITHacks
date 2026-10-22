@@ -457,49 +457,49 @@ Deploy: `firebase deploy --only hosting` (and `firestore:rules` for the default-
 #### Tasks
 
 **Schemas (branch `feat/schemas`, PR required)**
-- [ ] M1-01 Implement `schemas/common.ts`: `LatLng`, `Lighting`, `RiskLabel`, `Lang`.
-- [ ] M1-02 Implement `schemas/network.ts`: `Stop`, `Route`, `SafeSpot` (as in PRD §7.0).
-- [ ] M1-03 Implement `schemas/live.ts`: `BusStatus`, `Bus`, `EtaResult`, `AlertType`, `Alert`, `SimLive`.
-- [ ] M1-04 Implement `schemas/risk.ts`: `RiskFactors`, `WaitRisk`, `RouteOption`.
-- [ ] M1-05 Implement `schemas/reports.ts`: `ReportCategory`, `ReportInput`, `Report`; add a `SAFETY_CATEGORIES` constant (Decision D1) and `isSafetyRelated()` helper.
-- [ ] M1-06 Implement `schemas/trips.ts`: `TripState`, `Trip`, plus `expiresAtTs` handling note (Decision D3).
-- [ ] M1-07 Add `schemas/aggregates.ts`: `StopAggregate` (avg wait by hour, counts, corroboration weight, priority).
-- [ ] M1-08 Add `schemas/log.ts`: `AiLog` (matches PRD §11 JSON).
-- [ ] M1-09 Export everything from `shared/src/index.ts`.
-- [ ] M1-10 Write valid and invalid fixtures per schema in `shared/test/fixtures/`.
-- [ ] M1-11 Write tests: valid passes, each invalid case fails with the expected issue path (for example text > 500 chars, lat out of range, token length ≠ 32).
-- [ ] M1-12 Add a **no-PII schema test**: assert that `Report` and `Trip` have no keys matching `/name|phone|email|uid|device|lat|lng|location/i`.
+- [x] M1-01 Implement `schemas/common.ts`: `LatLng`, `Lighting`, `RiskLabel`, `Lang`.
+- [x] M1-02 Implement `schemas/network.ts`: `Stop`, `Route`, `SafeSpot` (as in PRD §7.0).
+- [x] M1-03 Implement `schemas/live.ts`: `BusStatus`, `Bus`, `EtaResult`, `AlertType`, `Alert`, `SimLive`.
+- [x] M1-04 Implement `schemas/risk.ts`: `RiskFactors`, `WaitRisk`, `RouteOption`.
+- [x] M1-05 Implement `schemas/reports.ts`: `ReportCategory`, `ReportInput`, `Report`; add a `SAFETY_CATEGORIES` constant (Decision D1) and `isSafetyRelated()` helper.
+- [x] M1-06 Implement `schemas/trips.ts`: `TripState`, `Trip`, plus `expiresAtTs` handling note (Decision D3).
+- [x] M1-07 Add `schemas/aggregates.ts`: `StopAggregate` (avg wait by hour, counts, corroboration weight, priority).
+- [x] M1-08 Add `schemas/log.ts`: `AiLog` (matches PRD §11 JSON).
+- [x] M1-09 Export everything from `shared/src/index.ts`.
+- [x] M1-10 Write valid and invalid fixtures per schema in `shared/test/fixtures/`.
+- [x] M1-11 Write tests: valid passes, each invalid case fails with the expected issue path (for example text > 500 chars, lat out of range, token length ≠ 32).
+- [x] M1-12 Add a **no-PII schema test**: assert that `Report` and `Trip` have no keys matching `/name|phone|email|uid|device|lat|lng|location/i`.
 
 **Geo and time helpers (needed by seed verification)**
-- [ ] M1-13 Implement `engine/geo.ts`: `haversineM`, `polylineLengthM`, `pointAtDistance`, `distanceAlongRoute(stop)`.
-- [ ] M1-14 Implement `engine/time.ts`: IST conversion, `periodOf(hour)`, `trafficFactor(hour)`, `headwayMin(route, hour)`, `isNight(hour)`.
-- [ ] M1-15 Tests for geo (known distances, interpolation endpoints) and time (boundaries at 8, 10, 11, 16, 17, 19, 20, 22).
+- [x] M1-13 Implement `engine/geo.ts`: `haversineM`, `polylineLengthM`, `pointAtDistance`, `distanceAlongRoute(stop)`.
+- [x] M1-14 Implement `engine/time.ts`: IST conversion, `periodOf(hour)`, `trafficFactor(hour)`, `headwayMin(route, hour)`, `isNight(hour)`.
+- [x] M1-15 Tests for geo (known distances, interpolation endpoints) and time (boundaries at 8, 10, 11, 16, 17, 19, 20, 22).
 
 **Seed data (see §8 for exact contents)**
-- [ ] M1-16 Create `seed/stops.json` (at least 16 stops incl. Stop A and busy alternative Stop B).
-- [ ] M1-17 Create `seed/routes.json` (4 routes with polylines and stop order).
-- [ ] M1-18 Create `seed/safeSpots.json` (10–14 spots near Stop A, Stop B, and interchange stops).
-- [ ] M1-19 Create `seed/reports.json` (40–50 reports, Hindi and English, with Stop A exactly 7 safety-related).
-- [ ] M1-20 Create `scripts/generate-history.ts` with a seeded RNG; generate `seed/history.json` (30 days × stops × hours).
-- [ ] M1-21 Create `seed/incidents.json` (scripted timeline: stall, likely skip, ghost bus).
-- [ ] M1-22 Write `seed/README.md` documenting each file and stating that **all values are simulated**.
-- [ ] M1-23 Write `scripts/verify-seed.ts` that validates every seed file with zod and asserts the headline numbers (Stop A avg evening wait 18 ± 0.5, 7 safety-related reports, activity 0.2).
-- [ ] M1-24 Add the verify script as `npm run verify:seed` and run it in CI.
+- [x] M1-16 Create `seed/stops.json` (at least 16 stops incl. Stop A and busy alternative Stop B).
+- [x] M1-17 Create `seed/routes.json` (4 routes with polylines and stop order).
+- [x] M1-18 Create `seed/safeSpots.json` (10–14 spots near Stop A, Stop B, and interchange stops).
+- [x] M1-19 Create `seed/reports.json` (40–50 reports, Hindi and English, with Stop A exactly 7 safety-related).
+- [x] M1-20 Create `scripts/generate-history.ts` with a seeded RNG; generate `seed/history.json` (30 days × stops × hours).
+- [x] M1-21 Create `seed/incidents.json` (scripted timeline: stall, likely skip, ghost bus).
+- [x] M1-22 Write `seed/README.md` documenting each file and stating that **all values are simulated**.
+- [x] M1-23 Write `scripts/verify-seed.ts` that validates every seed file with zod and asserts the headline numbers (Stop A avg evening wait 18 ± 0.5, 7 safety-related reports, activity 0.2).
+- [x] M1-24 Add the verify script as `npm run verify:seed` and run it in CI.
 
 **Seeding to Firestore**
-- [ ] M1-25 Implement `functions/src/scripts/seedFirestore.ts` (admin SDK; idempotent via `set` with fixed IDs; batched writes ≤ 500).
-- [ ] M1-26 Add `npm run seed:emulator` (targets emulator host) and `npm run seed:prod` (requires explicit `--confirm` flag).
-- [ ] M1-27 Test: running the seed twice yields identical document counts.
+- [x] M1-25 Implement `functions/src/scripts/seedFirestore.ts` (admin SDK; idempotent via `set` with fixed IDs; batched writes ≤ 500).
+- [x] M1-26 Add `npm run seed:emulator` (targets emulator host) and `npm run seed:prod` (requires explicit `--confirm` flag).
+- [x] M1-27 Test: running the seed twice yields identical document counts.
 
 **Rules (branch `feat/rules-v1`, PR required)**
-- [ ] M1-28 Replace default-deny with the PRD §7.2 rules for the collections that exist so far (`stops`, `routes`, `safeSpots`, `history` public read; everything else denied).
-- [ ] M1-29 Add `firestore.indexes.json` entries from PRD §7.3.
-- [ ] M1-30 Write rules tests with `@firebase/rules-unit-testing`: public can read stops/routes/safeSpots/history; nobody can write them; unknown collections denied.
+- [x] M1-28 Replace default-deny with the PRD §7.2 rules for the collections that exist so far (`stops`, `routes`, `safeSpots`, `history` public read; everything else denied).
+- [x] M1-29 Add `firestore.indexes.json` entries from PRD §7.3.
+- [x] M1-30 Write rules tests with `@firebase/rules-unit-testing`: public can read stops/routes/safeSpots/history; nobody can write them; unknown collections denied.
 
 **Deploy**
-- [ ] M1-31 Seed production with `npm run seed:prod -- --confirm` (after reviewing the dry-run count).
-- [ ] M1-32 `firebase deploy --only firestore:rules,firestore:indexes`.
-- [ ] M1-33 Temporary Home page lists the stop count from Firestore to prove end-to-end reads.
+- [x] M1-31 Seed production with `npm run seed:prod -- --confirm` (after reviewing the dry-run count).
+- [x] M1-32 `firebase deploy --only firestore:rules,firestore:indexes`.
+- [x] M1-33 Temporary Home page lists the stop count from Firestore to prove end-to-end reads.
 
 #### Files created or changed
 `shared/src/schemas/*`, `shared/src/engine/{geo,time}.ts`, `seed/*`, `scripts/*`, `functions/src/scripts/seedFirestore.ts`, `firestore.rules`, `firestore.indexes.json`, tests.
@@ -529,8 +529,8 @@ chore: add firestore indexes
 Deploy: `firestore:rules`, `firestore:indexes`, `hosting`.
 
 #### M1 exit checklist
-- [ ] All M1 tasks ticked, PR(s) merged.
-- [ ] Changelog v1.0.3 added.
+- [x] All M1 tasks ticked, PR(s) merged.
+- [x] Changelog v1.0.3 added.
 
 ---
 
