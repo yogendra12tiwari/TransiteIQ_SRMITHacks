@@ -1,7 +1,32 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // M0: Default deny for all documents until specific rules are deployed in later milestones
+    function isOperator() {
+      return request.auth != null && request.auth.token.role == "operator";
+    }
+
+    // Static network data: public read, strictly immutable by clients
+    match /stops/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /routes/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /safeSpots/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /history/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Default deny for all other collections until subsequent milestone rules are deployed
     match /{document=**} {
       allow read, write: if false;
     }
