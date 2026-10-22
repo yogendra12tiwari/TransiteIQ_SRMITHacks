@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-describe("Firestore Rules v1 (PRD §7.2 & M1-28)", () => {
+describe("Firestore Rules (PRD §7.2, M1-28 & M2-11)", () => {
   const rulesPath = path.resolve(__dirname, "../../firestore.rules");
   const rulesContent = fs.readFileSync(rulesPath, "utf-8");
 
@@ -27,7 +27,27 @@ describe("Firestore Rules v1 (PRD §7.2 & M1-28)", () => {
     expect(rulesContent).toMatch(/match\s+\/history\/\{id\}\s*\{[\s\S]*?allow write:\s*if false;/);
   });
 
+  it("M2-11: declares isOperator() helper checking auth token role", () => {
+    expect(rulesContent).toMatch(
+      /function\s+isOperator\(\)\s*\{\s*return\s+request\.auth\s*!=\s*null\s*&&\s*request\.auth\.token\.role\s*==\s*"operator";\s*\}/,
+    );
+  });
+
+  it("M2-11: permits public read and operator-only write on sim/{doc}", () => {
+    expect(rulesContent).toMatch(
+      /match\s+\/sim\/\{doc\}\s*\{\s*allow read:\s*if true;\s*allow write:\s*if isOperator\(\);\s*\}/,
+    );
+  });
+
+  it("M2-11: permits public read and operator-only write on alerts/{id}", () => {
+    expect(rulesContent).toMatch(
+      /match\s+\/alerts\/\{id\}\s*\{\s*allow read:\s*if true;\s*allow write:\s*if isOperator\(\);\s*\}/,
+    );
+  });
+
   it("enforces default deny for all other collections", () => {
-    expect(rulesContent).toMatch(/match\s+\/\{document=\*\*\}\s*\{\s*allow read,\s*write:\s*if false;\s*\}/);
+    expect(rulesContent).toMatch(
+      /match\s+\/\{document=\*\*\}\s*\{\s*allow read,\s*write:\s*if false;\s*\}/,
+    );
   });
 });
