@@ -21,6 +21,8 @@ export * from "./engine/explain.js";
 export * from "./engine/detectors.js";
 export * from "./engine/incidents.js";
 export * from "./engine/replay.js";
+export * from "./engine/places.js";
+export * from "./engine/planner.js";
 
 // Guardrails & i18n
 export * from "./guard/bannedPhrases.js";
