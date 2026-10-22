@@ -3,7 +3,18 @@ import { doc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useNetwork } from "../hooks/useNetwork";
 import { useOperator } from "../hooks/useOperator";
-import { initSim, stepSim, getSimLive, type SimState } from "@transitiq/shared";
+import {
+  initSim,
+  stepSim,
+  getSimLive,
+  type SimState,
+  IncidentRunner,
+  DEFAULT_INCIDENT_SCHEDULE,
+  generateReplayTape,
+  ReplayController,
+  type ReplayTape,
+  type Alert,
+} from "@transitiq/shared";
 
 const MAX_SESSION_SECONDS = 600; // 10 minutes auto-stop
 const DAILY_WRITE_QUOTA = 20000; // 20k writes daily budget
@@ -30,8 +41,15 @@ export function DemoPage() {
   const [tabConflict, setTabConflict] = useState<boolean>(false);
   const [lastWrittenTime, setLastWrittenTime] = useState<string | null>(null);
 
+  const [activeAlerts, setActiveAlerts] = useState<Alert[]>([]);
+  const [replaySec, setReplaySec] = useState<number>(0);
+
   const channelRef = useRef<BroadcastChannel | null>(null);
   const tabIdRef = useRef<string>(Math.random().toString(36).substring(2, 9));
+  const elapsedSecRef = useRef<number>(0);
+  const incidentRunnerRef = useRef<IncidentRunner>(new IncidentRunner(DEFAULT_INCIDENT_SCHEDULE));
+  const replayTapeRef = useRef<ReplayTape | null>(null);
+  const replayControllerRef = useRef<ReplayController | null>(null);
 
   // Single-tab guard (BroadcastChannel)
   useEffect(() => {
@@ -78,9 +96,62 @@ export function DemoPage() {
   const handleReset = () => {
     setIsRunning(false);
     setSecondsRemaining(MAX_SESSION_SECONDS);
+    elapsedSecRef.current = 0;
+    incidentRunnerRef.current = new IncidentRunner(DEFAULT_INCIDENT_SCHEDULE);
+    setActiveAlerts([]);
+    setReplaySec(0);
+
     if (routes.length > 0 && stops.length > 0) {
       const reset = initSim({ routes, stops }, hour, 42, scenario);
       setSimState(reset);
+    }
+  };
+
+  // Shortcut for demo evaluators to trigger incident sequence immediately (M3-35)
+  const jumpToIncidents = () => {
+    elapsedSecRef.current = 118; // 2 seconds before Bus 23 stall
+    setIsRunning(true);
+  };
+
+  // Replay Mode initialization & tape generation (M3-24, M3-25)
+  useEffect(() => {
+    if (scenario === "replay" && routes.length > 0 && stops.length > 0) {
+      setIsRunning(false);
+      const tape = generateReplayTape({ routes, stops }, hour, 600, 2, 20261023, DEFAULT_INCIDENT_SCHEDULE);
+      replayTapeRef.current = tape;
+      replayControllerRef.current = new ReplayController(tape);
+      const initialFrame = tape.frames[0];
+      if (initialFrame) {
+        setSimState((prev) =>
+          prev
+            ? {
+                ...prev,
+                buses: initialFrame.buses,
+                tick: initialFrame.tick,
+                simTimeMs: initialFrame.simTimeMs,
+              }
+            : null,
+        );
+        setActiveAlerts(initialFrame.alerts);
+      }
+    }
+  }, [scenario, routes, stops, hour]);
+
+  const handleReplaySeek = (newSec: number) => {
+    setReplaySec(newSec);
+    if (replayControllerRef.current) {
+      const frame = replayControllerRef.current.seek(newSec);
+      setSimState((prev) =>
+        prev
+          ? {
+              ...prev,
+              buses: frame.buses,
+              tick: frame.tick,
+              simTimeMs: frame.simTimeMs,
+            }
+          : null,
+      );
+      setActiveAlerts(frame.alerts);
     }
   };
 
@@ -100,10 +171,22 @@ export function DemoPage() {
 
       try {
         const dtSec = 2 * speedMultiplier;
-        const nextState = stepSim(simState, dtSec, { routes, stops }, hour);
-        setSimState(nextState);
+        elapsedSecRef.current += dtSec;
 
-        const liveSnapshot = getSimLive(nextState, hour, { routes, stops });
+        const nextState = stepSim(simState, dtSec, { routes, stops }, hour);
+
+        // Apply scripted incidents (t=120s stall, t=125s skip, t=180s ghost) (M3-23, M3-35)
+        const { state: incidentState, alerts } = incidentRunnerRef.current.apply(
+          nextState,
+          elapsedSecRef.current,
+          { routes, stops },
+          Date.now(),
+        );
+
+        setSimState(incidentState);
+        setActiveAlerts(alerts);
+
+        const liveSnapshot = getSimLive(incidentState, hour, { routes, stops }, undefined, alerts);
 
         // Write to Firestore sim/live doc ONLY in live scenario (M3-24, M3-26: zero writes in replay mode)
         if (scenario === "live") {
@@ -264,6 +347,15 @@ export function DemoPage() {
             >
               ↺ Reset
             </button>
+
+            <button
+              onClick={jumpToIncidents}
+              title="Fast forward to t=118s to immediately trigger Bus 23 stall and Stop A likely-skip alerts"
+              className="px-3.5 py-2.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 text-xs font-semibold transition flex items-center gap-1.5"
+            >
+              <span>⚡</span>
+              <span>Trigger Incidents (t=118s)</span>
+            </button>
           </div>
 
           {/* Speed Multiplier */}
@@ -323,6 +415,101 @@ export function DemoPage() {
           </div>
         </div>
       </div>
+
+      {/* Interactive Replay Scrubber Card (M3-24, M3-25, M3-36: Zero Writes Guarantee) */}
+      {scenario === "replay" && (
+        <div className="p-6 rounded-2xl bg-purple-950/40 border border-purple-500/40 shadow-lg space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse" />
+              <h2 className="text-base font-bold text-white">Client-Side Replay Timeline</h2>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 font-mono font-bold">
+                0 Firestore Writes
+              </span>
+            </div>
+            <span className="font-mono text-sm text-purple-300 font-bold">
+              {formatCountdown(replaySec)} / 10:00
+            </span>
+          </div>
+
+          <div className="space-y-1">
+            <input
+              type="range"
+              min={0}
+              max={600}
+              step={2}
+              value={replaySec}
+              onChange={(e) => handleReplaySeek(parseInt(e.target.value, 10))}
+              className="w-full accent-purple-500 cursor-pointer"
+            />
+            <div className="flex justify-between text-[11px] text-slate-400 font-mono">
+              <span>0:00 (Start)</span>
+              <span className="text-amber-400">2:00 (Bus 23 Stall)</span>
+              <span className="text-rose-400">2:05 (Stop A Skip)</span>
+              <span className="text-indigo-400">3:00 (Route 12 Ghost)</span>
+              <span>10:00 (End)</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-slate-300">
+            <button
+              onClick={() => handleReplaySeek(118)}
+              className="px-2.5 py-1 rounded-md bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-600/50"
+            >
+              Seek to Stall (1:58)
+            </button>
+            <button
+              onClick={() => handleReplaySeek(125)}
+              className="px-2.5 py-1 rounded-md bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-600/50"
+            >
+              Seek to Skip (2:05)
+            </button>
+            <button
+              onClick={() => handleReplaySeek(180)}
+              className="px-2.5 py-1 rounded-md bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-600/50"
+            >
+              Seek to Ghost (3:00)
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Active Alerts Monitor */}
+      {activeAlerts.length > 0 && (
+        <div className="p-5 rounded-2xl bg-slate-800/80 border border-amber-500/40 shadow-lg space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-amber-400 font-bold">⚠️</span>
+              <h2 className="text-sm font-bold text-white">
+                Active Disruption Alerts ({activeAlerts.length})
+              </h2>
+            </div>
+            <span className="text-xs text-amber-300">Live in sim/live</span>
+          </div>
+
+          <div className="space-y-2">
+            {activeAlerts.map((alert) => (
+              <div
+                key={alert.id}
+                className="p-2.5 rounded-lg bg-slate-900/90 border border-slate-700 text-xs flex items-center justify-between gap-3"
+              >
+                <div className="space-y-0.5">
+                  <div className="font-semibold text-white flex items-center gap-2">
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                      {alert.type}
+                    </span>
+                    <span>{alert.message}</span>
+                  </div>
+                  <div className="text-[10px] text-slate-400">
+                    Stops affected: {alert.affectedStopIds.join(", ")}
+                  </div>
+                </div>
+                <span className="text-[10px] uppercase font-bold text-slate-400">{alert.severity}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Live Fleet Inspector */}
       <div className="p-6 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-lg space-y-4">

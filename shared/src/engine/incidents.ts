@@ -20,6 +20,50 @@ export interface IncidentSchedule {
   events: IncidentEvent[];
 }
 
+export const DEFAULT_INCIDENT_SCHEDULE: IncidentSchedule = {
+  seed: 20261023,
+  startHour: 20,
+  events: [
+    {
+      atSec: 120,
+      type: "STALL",
+      busId: "bus_23_1",
+      durationSec: 360,
+      description: "Bus 23 stalls for ~6 minutes along stretch",
+    },
+    {
+      atSec: 125,
+      type: "LIKELY_SKIP",
+      busId: "bus_23_1",
+      stopId: "stop_A",
+      description: "Bus 23 is running behind schedule and is likely to skip Stop A",
+    },
+    {
+      atSec: 180,
+      type: "GHOST",
+      routeId: "route_12",
+      scheduledDepartureSec: 150,
+      description: "Scheduled departure on Route 12 shows no live GPS trace",
+    },
+  ],
+};
+
+function matchesBus(busId: string, targetId?: string): boolean {
+  if (!targetId) return false;
+  if (busId === targetId) return true;
+  const cleanA = busId.replace(/^bus_/, "").replace(/^route_/, "");
+  const cleanB = targetId.replace(/^bus_/, "").replace(/^route_/, "");
+  return cleanA === cleanB;
+}
+
+function matchesRoute(routeId: string, targetId?: string): boolean {
+  if (!targetId) return false;
+  if (routeId === targetId) return true;
+  const cleanA = routeId.replace(/^route_/, "");
+  const cleanB = targetId.replace(/^route_/, "");
+  return cleanA === cleanB;
+}
+
 export class IncidentRunner {
   private events: IncidentEvent[];
 
@@ -54,9 +98,11 @@ export class IncidentRunner {
       if (event.type === "STALL" && event.busId) {
         const stallEnd = event.atSec + (event.durationSec ?? 360);
         if (elapsedSec < stallEnd) {
-          stalledBusIds.add(event.busId);
+          const bus = state.buses.find((b) => matchesBus(b.id, event.busId));
+          const effectiveBusId = bus ? bus.id : event.busId;
+          stalledBusIds.add(effectiveBusId);
+
           const stallMin = Math.round(((elapsedSec - event.atSec) / 60) * 10) / 10;
-          const bus = state.buses.find((b) => b.id === event.busId);
           const route = network.routes.find((r) => r.id === bus?.routeId);
 
           alerts.push(
@@ -87,7 +133,7 @@ export class IncidentRunner {
           }),
         );
       } else if (event.type === "GHOST" && event.routeId) {
-        const route = network.routes.find((r) => r.id === event.routeId);
+        const route = network.routes.find((r) => matchesRoute(r.id, event.routeId));
         const routeName = route ? route.name : event.routeId;
         const departureSec = event.scheduledDepartureSec ?? event.atSec - 30;
         const ghostMin = Math.max(1, Math.floor((elapsedSec - departureSec) / 60));
