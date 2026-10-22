@@ -103,25 +103,27 @@ export function DemoPage() {
         const nextState = stepSim(simState, dtSec, { routes, stops }, hour);
         setSimState(nextState);
 
-        const liveSnapshot = getSimLive(nextState, hour);
+        const liveSnapshot = getSimLive(nextState, hour, { routes, stops });
 
-        // Write to Firestore sim/live doc
-        await setDoc(doc(db, "sim", "live"), liveSnapshot);
+        // Write to Firestore sim/live doc ONLY in live scenario (M3-24, M3-26: zero writes in replay mode)
+        if (scenario === "live") {
+          await setDoc(doc(db, "sim", "live"), liveSnapshot);
 
-        setSessionWrites((w) => w + 1);
-        setTotalWrites((t) => {
-          const updated = t + 1;
-          localStorage.setItem("transitiq_write_counter", updated.toString());
-          return updated;
-        });
-        setLastWrittenTime(new Date().toLocaleTimeString());
+          setSessionWrites((w) => w + 1);
+          setTotalWrites((t) => {
+            const updated = t + 1;
+            localStorage.setItem("transitiq_write_counter", updated.toString());
+            return updated;
+          });
+          setLastWrittenTime(new Date().toLocaleTimeString());
+        }
       } catch (err) {
         console.error("Failed to step and write sim state:", err);
       }
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [isRunning, isLeaderTab, simState, routes, stops, hour, speedMultiplier]);
+  }, [isRunning, isLeaderTab, simState, routes, stops, hour, speedMultiplier, scenario]);
 
   const formatCountdown = (secs: number) => {
     const mins = Math.floor(secs / 60);

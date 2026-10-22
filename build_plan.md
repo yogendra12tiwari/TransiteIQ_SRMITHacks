@@ -665,12 +665,12 @@ Deploy: `firestore:rules`, `hosting`.
 
 **Wire into live state and UI**
 - [x] M3-27 Extend `stepSim` output to include `etas` (for stops that riders watch) and `alerts`; keep document size well under 1 MB (assert in a test).
-- [ ] M3-28 Add `AlertFeed` page (`/alerts`) with severity styling and language toggle for messages.
-- [ ] M3-29 Add `StopSheet` (tap a stop): next buses with `low–high` ETA, risk badge, "Why?" drawer with factor bars.
-- [ ] M3-30 Add `RiskBadge` with colour **and** text (Low/Medium/High) and an accessible label.
-- [ ] M3-31 Component tests: ETA range text formatting ("6–8 min"), badge colour/label mapping, drawer shows all five factors.
-- [ ] M3-32 Banner on the map when a `LIKELY_SKIP` alert affects a followed stop.
-- [ ] M3-33 Add a visible "Replay" chip when `scenario = replay`.
+- [x] M3-28 Add `AlertFeed` page (`/alerts`) with severity styling and language toggle for messages.
+- [x] M3-29 Add `StopSheet` (tap a stop): next buses with `low–high` ETA, risk badge, "Why?" drawer with factor bars.
+- [x] M3-30 Add `RiskBadge` with colour **and** text (Low/Medium/High) and an accessible label.
+- [x] M3-31 Component tests: ETA range text formatting ("6–8 min"), badge colour/label mapping, drawer shows all five factors.
+- [x] M3-32 Banner on the map when a `LIKELY_SKIP` alert affects a followed stop.
+- [x] M3-33 Add a visible "Replay" chip when `scenario = replay`.
 
 **Deploy and verify**
 - [ ] M3-34 `firebase deploy --only hosting`.

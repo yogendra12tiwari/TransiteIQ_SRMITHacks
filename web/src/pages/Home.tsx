@@ -54,6 +54,15 @@ export function HomePage() {
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 font-mono">
                     Lucknow
                   </span>
+                  {liveData?.scenario === "replay" && (
+                    <span
+                      data-testid="replay-chip"
+                      className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold uppercase tracking-wider animate-pulse flex items-center gap-1"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                      Replay
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -76,7 +85,14 @@ export function HomePage() {
                     Loading transit map...
                   </div>
                 ) : (
-                  <MapView routes={routes} stops={stops} buses={buses} isStale={isStale} />
+                  <MapView
+                    routes={routes}
+                    stops={stops}
+                    buses={buses}
+                    etas={liveData?.etas ?? []}
+                    alerts={liveData?.alerts ?? []}
+                    isStale={isStale}
+                  />
                 )}
               </div>
 

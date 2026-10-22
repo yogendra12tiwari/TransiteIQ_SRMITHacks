@@ -143,6 +143,18 @@ export function eta(
 }
 
 /**
+ * Formats low and high bounds into a user-facing range string (e.g. "6–8 min").
+ */
+export function formatEtaRange(lowMin: number, highMin: number): string {
+  const low = Math.round(lowMin);
+  const high = Math.round(highMin);
+  if (low === high) {
+    return `${low} min`;
+  }
+  return `${low}–${high} min`;
+}
+
+/**
  * Computes next arriving buses for a specific stop, sorted ascending by meanMin.
  */
 export function nextBusesAtStop(

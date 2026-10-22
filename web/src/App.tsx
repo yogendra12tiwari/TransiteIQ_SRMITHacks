@@ -3,6 +3,7 @@ import { SimulatedDataBadge } from "./components/SimulatedDataBadge";
 import { RequireOperator } from "./components/RequireOperator";
 import { HomePage } from "./pages/Home";
 import { DemoPage } from "./pages/Demo";
+import { AlertsPage } from "./pages/Alerts";
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -61,14 +62,6 @@ function RouteDetailPage() {
   );
 }
 
-function AlertsPage() {
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Service Alerts</h1>
-      <p className="text-slate-300">Delays, stalls, likely skips, and ghost bus notifications.</p>
-    </div>
-  );
-}
 
 function ReportPage() {
   return (

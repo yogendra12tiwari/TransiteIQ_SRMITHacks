@@ -2,15 +2,19 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, TileLayer, Polyline, CircleMarker, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import type { Route, Stop } from "@transitiq/shared";
-import type { Bus } from "@transitiq/shared";
+import type { Route, Stop, Bus, Alert, EtaResult } from "@transitiq/shared";
+import { StopSheet } from "./StopSheet";
 
-interface MapViewProps {
+export interface MapViewProps {
   routes: Route[];
   stops: Stop[];
   buses: Bus[];
+  etas?: EtaResult[];
+  alerts?: Alert[];
   isStale?: boolean;
+  followedStopId?: string;
   onBusSelect?: (bus: Bus) => void;
+  onStopSelect?: (stop: Stop) => void;
 }
 
 // Lucknow City Center Coordinates (Hazratganj)
@@ -48,9 +52,26 @@ function MapResizer() {
   return null;
 }
 
-export function MapView({ routes, stops, buses, isStale = false, onBusSelect }: MapViewProps) {
-  // Selected bus for detail modal / bottom sheet
+export function MapView({
+  routes,
+  stops,
+  buses,
+  etas = [],
+  alerts = [],
+  isStale = false,
+  followedStopId,
+  onBusSelect,
+  onStopSelect,
+}: MapViewProps) {
+  // Selected bus and stop for detail modals / sheets
   const [selectedBus, setSelectedBus] = useState<Bus | null>(null);
+  const [selectedStop, setSelectedStop] = useState<Stop | null>(null);
+
+  // Check for likely skip alerts affecting the followed/selected stop (M3-32)
+  const activeSkipAlert = alerts.find(
+    (a) =>
+      a.type === "LIKELY_SKIP" && a.affectedStopIds.includes(followedStopId ?? selectedStop?.id ?? "stop_A"),
+  );
 
   // Active route visibility filters
   const [visibleRouteIds, setVisibleRouteIds] = useState<Record<string, boolean>>(() => {
@@ -165,6 +186,17 @@ export function MapView({ routes, stops, buses, isStale = false, onBusSelect }: 
         </div>
       )}
 
+      {/* Likely Skip Alert Banner (M3-32) */}
+      {activeSkipAlert && (
+        <div
+          data-testid="likely-skip-banner"
+          className="absolute top-12 left-1/2 -translate-x-1/2 z-[1000] px-4 py-2 rounded-xl bg-rose-600/95 text-white font-semibold text-xs shadow-2xl backdrop-blur flex items-center space-x-2 border border-rose-400 max-w-[90%]"
+        >
+          <span className="text-base">⚠️</span>
+          <span>{activeSkipAlert.message}</span>
+        </div>
+      )}
+
       {/* Route Filter Legend Overlay */}
       <div className="absolute top-3 left-3 z-[1000] p-2.5 rounded-xl bg-slate-900/85 backdrop-blur border border-slate-700/80 shadow-xl max-w-xs space-y-1.5 text-xs text-white">
         <div className="font-bold text-[11px] uppercase tracking-wider text-slate-400">
@@ -232,6 +264,12 @@ export function MapView({ routes, stops, buses, isStale = false, onBusSelect }: 
                 key={stop.id}
                 center={[stop.lat, stop.lng]}
                 radius={isStopA ? 9 : isStopB ? 8 : 6}
+                eventHandlers={{
+                  click: () => {
+                    setSelectedStop(stop);
+                    if (onStopSelect) onStopSelect(stop);
+                  },
+                }}
                 pathOptions={{
                   color: isStopA ? "#ef4444" : isStopB ? "#10b981" : "#475569",
                   fillColor: isStopA ? "#f87171" : isStopB ? "#34d399" : "#0f172a",
@@ -371,6 +409,15 @@ export function MapView({ routes, stops, buses, isStale = false, onBusSelect }: 
             </div>
           )}
         </div>
+      )}
+
+      {/* Stop Sheet (M3-29) */}
+      {selectedStop && (
+        <StopSheet
+          stop={selectedStop}
+          onClose={() => setSelectedStop(null)}
+          etas={etas.filter((e) => e.stopId === selectedStop.id)}
+        />
       )}
     </div>
   );
