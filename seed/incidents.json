@@ -1,0 +1,27 @@
+{
+  "seed": 20261023,
+  "startHour": 20,
+  "events": [
+    {
+      "atSec": 120,
+      "type": "STALL",
+      "busId": "bus_23_1",
+      "durationSec": 360,
+      "description": "Bus 23 stalls for ~6 minutes along stretch"
+    },
+    {
+      "atSec": 125,
+      "type": "LIKELY_SKIP",
+      "busId": "bus_23_1",
+      "stopId": "stop_A",
+      "description": "Bus 23 is running behind schedule and is likely to skip Stop A"
+    },
+    {
+      "atSec": 180,
+      "type": "GHOST",
+      "routeId": "route_12",
+      "scheduledDepartureSec": 150,
+      "description": "Scheduled departure on Route 12 shows no live GPS trace"
+    }
+  ]
+}

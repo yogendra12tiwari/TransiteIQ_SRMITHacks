@@ -1,0 +1,178 @@
+[
+  {
+    "id": "stop_alambagh",
+    "name": "Alambagh",
+    "lat": 26.813,
+    "lng": 80.901,
+    "activity": 0.85,
+    "lighting": "good",
+    "ridershipPerEvening": 700,
+    "skipRate": 0.05,
+    "safeSpotIds": ["spot_alambagh_1", "spot_alambagh_2"]
+  },
+  {
+    "id": "stop_charbagh",
+    "name": "Charbagh",
+    "lat": 26.8315,
+    "lng": 80.923,
+    "activity": 0.9,
+    "lighting": "good",
+    "ridershipPerEvening": 900,
+    "skipRate": 0.05,
+    "safeSpotIds": ["spot_charbagh_1", "spot_charbagh_2"]
+  },
+  {
+    "id": "stop_aminabad",
+    "name": "Aminabad",
+    "lat": 26.847,
+    "lng": 80.925,
+    "activity": 0.85,
+    "lighting": "good",
+    "ridershipPerEvening": 650,
+    "skipRate": 0.08,
+    "safeSpotIds": ["spot_aminabad_1"]
+  },
+  {
+    "id": "stop_chowk",
+    "name": "Chowk",
+    "lat": 26.871,
+    "lng": 80.912,
+    "activity": 0.8,
+    "lighting": "moderate",
+    "ridershipPerEvening": 500,
+    "skipRate": 0.08,
+    "safeSpotIds": ["spot_chowk_1"]
+  },
+  {
+    "id": "stop_kaiserbagh",
+    "name": "Kaiserbagh",
+    "lat": 26.853,
+    "lng": 80.934,
+    "activity": 0.75,
+    "lighting": "good",
+    "ridershipPerEvening": 450,
+    "skipRate": 0.06,
+    "safeSpotIds": ["spot_kaiserbagh_1"]
+  },
+  {
+    "id": "stop_lu",
+    "name": "Lucknow University",
+    "lat": 26.864,
+    "lng": 80.925,
+    "activity": 0.6,
+    "lighting": "moderate",
+    "ridershipPerEvening": 600,
+    "skipRate": 0.1,
+    "safeSpotIds": ["spot_lu_1"]
+  },
+  {
+    "id": "stop_hazratganj",
+    "name": "Hazratganj",
+    "lat": 26.85,
+    "lng": 80.947,
+    "activity": 0.95,
+    "lighting": "good",
+    "ridershipPerEvening": 1000,
+    "skipRate": 0.04,
+    "safeSpotIds": ["spot_hazratganj_1", "spot_hazratganj_2"]
+  },
+  {
+    "id": "stop_lohia",
+    "name": "Lohia Path",
+    "lat": 26.851,
+    "lng": 80.96,
+    "activity": 0.55,
+    "lighting": "moderate",
+    "ridershipPerEvening": 380,
+    "skipRate": 0.1,
+    "safeSpotIds": ["spot_lohia_1"]
+  },
+  {
+    "id": "stop_A",
+    "name": "Stop A (Example)",
+    "lat": 26.8528,
+    "lng": 80.9655,
+    "activity": 0.2,
+    "lighting": "poor",
+    "ridershipPerEvening": 400,
+    "skipRate": 0.25,
+    "safeSpotIds": ["spot_A_1", "spot_A_2", "spot_A_3"]
+  },
+  {
+    "id": "stop_B",
+    "name": "Stop B (Market Junction)",
+    "lat": 26.8545,
+    "lng": 80.9685,
+    "activity": 0.8,
+    "lighting": "good",
+    "ridershipPerEvening": 420,
+    "skipRate": 0.05,
+    "safeSpotIds": ["spot_B_1", "spot_B_2", "spot_B_3"]
+  },
+  {
+    "id": "stop_munshipulia",
+    "name": "Munshi Pulia",
+    "lat": 26.87,
+    "lng": 80.98,
+    "activity": 0.5,
+    "lighting": "moderate",
+    "ridershipPerEvening": 300,
+    "skipRate": 0.12,
+    "safeSpotIds": ["spot_munshipulia_1"]
+  },
+  {
+    "id": "stop_indiranagar",
+    "name": "Indira Nagar",
+    "lat": 26.876,
+    "lng": 80.993,
+    "activity": 0.7,
+    "lighting": "good",
+    "ridershipPerEvening": 500,
+    "skipRate": 0.07,
+    "safeSpotIds": ["spot_indiranagar_1"]
+  },
+  {
+    "id": "stop_patrakar",
+    "name": "Patrakarpuram",
+    "lat": 26.86,
+    "lng": 80.996,
+    "activity": 0.65,
+    "lighting": "moderate",
+    "ridershipPerEvening": 380,
+    "skipRate": 0.09,
+    "safeSpotIds": ["spot_patrakar_1"]
+  },
+  {
+    "id": "stop_gomtinagar",
+    "name": "Gomti Nagar",
+    "lat": 26.856,
+    "lng": 81.001,
+    "activity": 0.85,
+    "lighting": "good",
+    "ridershipPerEvening": 800,
+    "skipRate": 0.05,
+    "safeSpotIds": ["spot_gomtinagar_1"]
+  },
+  {
+    "id": "stop_vibhuti",
+    "name": "Vibhuti Khand",
+    "lat": 26.865,
+    "lng": 81.01,
+    "activity": 0.8,
+    "lighting": "good",
+    "ridershipPerEvening": 450,
+    "skipRate": 0.06,
+    "safeSpotIds": ["spot_vibhuti_1"]
+  },
+  {
+    "id": "stop_naka",
+    "name": "Naka Hindola",
+    "lat": 26.842,
+    "lng": 80.917,
+    "activity": 0.7,
+    "lighting": "moderate",
+    "ridershipPerEvening": 350,
+    "skipRate": 0.1,
+    "safeSpotIds": ["spot_naka_1"]
+  }
+]

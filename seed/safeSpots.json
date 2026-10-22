@@ -1,0 +1,98 @@
+[
+  {
+    "id": "spot_A_1",
+    "name": "Apollo 24/7 Pharmacy (Lohia Stretch)",
+    "kind": "pharmacy",
+    "lat": 26.8522,
+    "lng": 80.9665,
+    "openLate": true
+  },
+  {
+    "id": "spot_A_2",
+    "name": "Indian Oil Petrol Pump & Convenience",
+    "kind": "petrol_pump",
+    "lat": 26.8535,
+    "lng": 80.9648,
+    "openLate": true
+  },
+  {
+    "id": "spot_A_3",
+    "name": "QuickStop 24h Store",
+    "kind": "shop_24h",
+    "lat": 26.8532,
+    "lng": 80.967,
+    "openLate": true
+  },
+  {
+    "id": "spot_B_1",
+    "name": "Market Junction Central Chemist",
+    "kind": "pharmacy",
+    "lat": 26.8548,
+    "lng": 80.9688,
+    "openLate": true
+  },
+  {
+    "id": "spot_B_2",
+    "name": "SBI 24/7 Guarded ATM Kiosk",
+    "kind": "other",
+    "lat": 26.8542,
+    "lng": 80.9682,
+    "openLate": true
+  },
+  {
+    "id": "spot_B_3",
+    "name": "Day & Night Food Mart",
+    "kind": "shop_24h",
+    "lat": 26.855,
+    "lng": 80.969,
+    "openLate": true
+  },
+  {
+    "id": "spot_charbagh_1",
+    "name": "Railway Station Main Gate Staffed Helpdesk",
+    "kind": "other",
+    "lat": 26.8312,
+    "lng": 80.9228,
+    "openLate": true
+  },
+  {
+    "id": "spot_charbagh_2",
+    "name": "Charbagh HP Auto Care 24h",
+    "kind": "petrol_pump",
+    "lat": 26.832,
+    "lng": 80.9235,
+    "openLate": true
+  },
+  {
+    "id": "spot_hazratganj_1",
+    "name": "Hazratganj Multi-Level Guarded Plaza",
+    "kind": "mall_entrance",
+    "lat": 26.8498,
+    "lng": 80.9468,
+    "openLate": true
+  },
+  {
+    "id": "spot_hazratganj_2",
+    "name": "Sanjeevani Medicos Hazratganj",
+    "kind": "pharmacy",
+    "lat": 26.8505,
+    "lng": 80.9475,
+    "openLate": true
+  },
+  {
+    "id": "spot_aminabad_1",
+    "name": "Aminabad Clock Tower Guarded Booth",
+    "kind": "other",
+    "lat": 26.8472,
+    "lng": 80.9248,
+    "openLate": false
+  },
+  {
+    "id": "spot_gomtinagar_1",
+    "name": "Patrakarpuram 24h MediPoint",
+    "kind": "pharmacy",
+    "lat": 26.8562,
+    "lng": 81.0008,
+    "openLate": true
+  }
+]
