@@ -1,0 +1,24 @@
+{
+  "name": "transitiq",
+  "version": "0.0.0",
+  "private": true,
+  "description": "TransitIQ — public transport route and timing tracker with a women-safety layer (SI-05+). Simulated data.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "web",
+    "functions"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "npm run build --workspace shared --if-present && npm run build --workspace web --if-present && npm run build --workspace functions --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test:shared && npm run test:web && npm run test:functions",
+    "test:shared": "npm test --workspace shared --if-present",
+    "test:web": "npm test --workspace web --if-present",
+    "test:functions": "npm test --workspace functions --if-present"
+  }
+}
