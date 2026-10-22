@@ -649,13 +649,13 @@ Deploy: `firestore:rules`, `hosting`.
 - [x] M3-15 Banned-phrase test over every explanation template.
 
 **Detectors (`engine/detectors.ts`)**
-- [ ] M3-16 Implement `detectDelay`: compare actual position with schedule-implied position; threshold N minutes (default 4).
-- [ ] M3-17 Implement `detectStall`: near-zero speed for > 3 minutes away from a stop.
-- [ ] M3-18 Implement `detectLikelySkip`: behind schedule and (historical skip rate at stop/hour > 0.2 or expected window passed).
-- [ ] M3-19 Implement `detectGhost`: scheduled departure with no trace within 10 minutes.
-- [ ] M3-20 Alert factory builds `Alert` with English + Hindi messages from `shared/i18n`; stable IDs so repeated detections update rather than duplicate.
-- [ ] M3-21 Tests for each detector with positive, negative, and boundary cases (exactly 3:00 minutes stall, exactly 10:00 ghost).
-- [ ] M3-22 Alert lifecycle test: raise → persist while condition holds → clear when resolved.
+- [x] M3-16 Implement `detectDelay`: compare actual position with schedule-implied position; threshold N minutes (default 4).
+- [x] M3-17 Implement `detectStall`: near-zero speed for > 3 minutes away from a stop.
+- [x] M3-18 Implement `detectLikelySkip`: behind schedule and (historical skip rate at stop/hour > 0.2 or expected window passed).
+- [x] M3-19 Implement `detectGhost`: scheduled departure with no trace within 10 minutes.
+- [x] M3-20 Alert factory builds `Alert` with English + Hindi messages from `shared/i18n`; stable IDs so repeated detections update rather than duplicate.
+- [x] M3-21 Tests for each detector with positive, negative, and boundary cases (exactly 3:00 minutes stall, exactly 10:00 ghost).
+- [x] M3-22 Alert lifecycle test: raise → persist while condition holds → clear when resolved.
 
 **Scripted incidents and replay**
 - [ ] M3-23 Implement an `IncidentRunner` that applies `seed/incidents.json` events to the simulator at given offsets (t=2:00 Bus 23 stalls for 6 minutes; t=3:00 Route 12 ghost).

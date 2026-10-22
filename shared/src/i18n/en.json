@@ -1,0 +1,8 @@
+{
+  "alerts": {
+    "delay": "Bus {busId} on route {routeName} is running {delayMin} min behind schedule.",
+    "stall": "Bus {busId} has been stationary for {stallMin} min away from any stop.",
+    "likelySkip": "Bus {busId} is likely to skip {stopName} due to corridor congestion and schedule recovery.",
+    "ghost": "Scheduled departure on route {routeName} has no live tracking report ({ghostMin} min past departure)."
+  }
+}
