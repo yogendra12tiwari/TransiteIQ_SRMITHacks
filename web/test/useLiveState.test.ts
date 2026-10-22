@@ -25,10 +25,10 @@ describe("useLiveState hook (M2-24)", () => {
   it("subscribes to sim/live doc and returns parsed live state", () => {
     let snapshotCallback: (snap: unknown) => void = () => {};
 
-    vi.mocked(firestore.onSnapshot).mockImplementation((((...args: unknown[]) => {
+    vi.mocked(firestore.onSnapshot).mockImplementation(((...args: unknown[]) => {
       snapshotCallback = args[1] as (snap: unknown) => void;
       return vi.fn();
-    }) as unknown) as typeof firestore.onSnapshot);
+    }) as unknown as typeof firestore.onSnapshot);
 
     const { result } = renderHook(() => useLiveState());
     expect(result.current.loading).toBe(true);
@@ -69,10 +69,10 @@ describe("useLiveState hook (M2-24)", () => {
   it("marks state stale when no updates arrive for > 8 seconds", () => {
     let snapshotCallback: (snap: unknown) => void = () => {};
 
-    vi.mocked(firestore.onSnapshot).mockImplementation((((...args: unknown[]) => {
+    vi.mocked(firestore.onSnapshot).mockImplementation(((...args: unknown[]) => {
       snapshotCallback = args[1] as (snap: unknown) => void;
       return vi.fn();
-    }) as unknown) as typeof firestore.onSnapshot);
+    }) as unknown as typeof firestore.onSnapshot);
 
     const { result } = renderHook(() => useLiveState());
 

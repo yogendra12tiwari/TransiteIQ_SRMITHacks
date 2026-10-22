@@ -11,15 +11,15 @@
 
 The transit fleet simulator runs in the operator controller (`/demo`) and periodically publishes the fleet telemetry to the single Cloud Firestore document at `sim/live`.
 
-| Metric | Measured Value | Design Limit |
-|---|---|---|
-| **Tick Interval** | 2.0 seconds | 2.0 seconds |
-| **Writes per Minute** | 30 writes/min | 30 writes/min |
-| **Session Duration Cap** | 10 minutes (600 s) | 10 minutes |
-| **Writes per Session** | 300 writes | 300 writes |
-| **Daily Free Tier Quota** | 20,000 writes/day | 20,000 writes/day |
-| **Session % of Daily Quota** | **1.5%** | < 2% |
-| **Warning Threshold** | 16,000 writes (80%) | 80% banner |
+| Metric                       | Measured Value      | Design Limit      |
+| ---------------------------- | ------------------- | ----------------- |
+| **Tick Interval**            | 2.0 seconds         | 2.0 seconds       |
+| **Writes per Minute**        | 30 writes/min       | 30 writes/min     |
+| **Session Duration Cap**     | 10 minutes (600 s)  | 10 minutes        |
+| **Writes per Session**       | 300 writes          | 300 writes        |
+| **Daily Free Tier Quota**    | 20,000 writes/day   | 20,000 writes/day |
+| **Session % of Daily Quota** | **1.5%**            | < 2%              |
+| **Warning Threshold**        | 16,000 writes (80%) | 80% banner        |
 
 ---
 
