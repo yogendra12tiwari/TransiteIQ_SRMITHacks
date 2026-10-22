@@ -23,6 +23,8 @@ export * from "./engine/incidents.js";
 export * from "./engine/replay.js";
 export * from "./engine/places.js";
 export * from "./engine/planner.js";
+export * from "./engine/tripMachine.js";
+export * from "./engine/safewait.js";
 
 // Guardrails & i18n
 export * from "./guard/bannedPhrases.js";
