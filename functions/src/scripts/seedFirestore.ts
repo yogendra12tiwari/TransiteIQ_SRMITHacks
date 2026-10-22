@@ -1,5 +1,5 @@
 import admin from "firebase-admin";
-import { Firestore } from "@google-cloud/firestore";
+import type { Firestore } from "@google-cloud/firestore";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
