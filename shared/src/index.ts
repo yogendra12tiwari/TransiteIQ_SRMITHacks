@@ -15,3 +15,4 @@ export * from "./schemas/log.js";
 export * from "./engine/geo.js";
 export * from "./engine/time.js";
 export * from "./engine/simulator.js";
+export * from "./engine/eta.js";

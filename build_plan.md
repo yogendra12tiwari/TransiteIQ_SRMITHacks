@@ -628,12 +628,12 @@ Deploy: `firestore:rules`, `hosting`.
 #### Tasks
 
 **ETA (`engine/eta.ts`)**
-- [ ] M3-01 Implement `routeDistanceToStop(bus, stop, route)` including wrap-around and "bus already passed" cases (returns `null`).
-- [ ] M3-02 Implement `recentAvgSpeed(bus)` using an exponential moving average stored on the bus state.
-- [ ] M3-03 Implement `eta(bus, stop, hour, hist)` per PRD §9.2: mean, 80% band, clamp low ≥ 0.
-- [ ] M3-04 Implement `nextBusesAtStop(stopId, buses, routes, hour, hist, n=3)` sorted by `meanMin`.
-- [ ] M3-05 Tests: stationary bus ⇒ large high bound but finite; passed bus ⇒ excluded; band widens with distance; higher `errorMin` widens band.
-- [ ] M3-06 Property test: `lowMin <= meanMin <= highMin` always.
+- [x] M3-01 Implement `routeDistanceToStop(bus, stop, route)` including wrap-around and "bus already passed" cases (returns `null`).
+- [x] M3-02 Implement `recentAvgSpeed(bus)` using an exponential moving average stored on the bus state.
+- [x] M3-03 Implement `eta(bus, stop, hour, hist)` per PRD §9.2: mean, 80% band, clamp low ≥ 0.
+- [x] M3-04 Implement `nextBusesAtStop(stopId, buses, routes, hour, hist, n=3)` sorted by `meanMin`.
+- [x] M3-05 Tests: stationary bus ⇒ large high bound but finite; passed bus ⇒ excluded; band widens with distance; higher `errorMin` widens band.
+- [x] M3-06 Property test: `lowMin <= meanMin <= highMin` always.
 
 **Baseline and evaluation**
 - [ ] M3-07 Implement a naive schedule-only baseline ETA (distance / scheduled average speed).
