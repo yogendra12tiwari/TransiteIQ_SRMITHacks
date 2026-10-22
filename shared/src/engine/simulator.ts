@@ -1,7 +1,14 @@
 import type { Route, Stop } from "../schemas/network.js";
-import { type Bus, type SimLive, SimLive as SimLiveSchema } from "../schemas/live.js";
+import {
+  type Bus,
+  type Alert,
+  type EtaResult,
+  type SimLive,
+  SimLive as SimLiveSchema,
+} from "../schemas/live.js";
 import { polylineLengthM, pointAtDistance, distanceAlongRoute, type LatLngTuple } from "./geo.js";
 import { trafficFactor, headwayMin } from "./time.js";
+import { nextBusesAtStop, type EtaHistory } from "./eta.js";
 
 export interface SimBus extends Bus {
   dwellRemainingSec?: number;
@@ -199,9 +206,24 @@ export function stepSim(state: SimState, dtSec: number, network: Network, hour =
 }
 
 /**
- * Produces a validated SimLive snapshot from the simulation state.
+ * Produces a validated SimLive snapshot from the simulation state (M2, M3-27).
+ * Optionally computes ETAs for network stops and includes active alerts.
  */
-export function getSimLive(state: SimState, hour: number): SimLive {
+export function getSimLive(
+  state: SimState,
+  hour: number,
+  network?: Network,
+  hist?: EtaHistory,
+  alerts: Alert[] = [],
+): SimLive {
+  const etas: EtaResult[] = [];
+  if (network && network.stops && network.routes) {
+    for (const stop of network.stops) {
+      const stopEtas = nextBusesAtStop(stop, state.buses, network.routes, hour, hist, 2);
+      etas.push(...stopEtas);
+    }
+  }
+
   return SimLiveSchema.parse({
     simTimeMs: state.simTimeMs,
     hour,
@@ -214,8 +236,8 @@ export function getSimLive(state: SimState, hour: number): SimLive {
       lng: b.lng,
       status: b.status,
     })),
-    etas: [],
-    alerts: [],
+    etas,
+    alerts,
     tick: state.tick,
     scenario: state.scenario,
   });

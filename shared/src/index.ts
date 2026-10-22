@@ -19,6 +19,8 @@ export * from "./engine/eta.js";
 export * from "./engine/risk.js";
 export * from "./engine/explain.js";
 export * from "./engine/detectors.js";
+export * from "./engine/incidents.js";
+export * from "./engine/replay.js";
 
 // Guardrails & i18n
 export * from "./guard/bannedPhrases.js";

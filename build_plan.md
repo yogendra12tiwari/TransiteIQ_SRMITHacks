@@ -658,13 +658,13 @@ Deploy: `firestore:rules`, `hosting`.
 - [x] M3-22 Alert lifecycle test: raise → persist while condition holds → clear when resolved.
 
 **Scripted incidents and replay**
-- [ ] M3-23 Implement an `IncidentRunner` that applies `seed/incidents.json` events to the simulator at given offsets (t=2:00 Bus 23 stalls for 6 minutes; t=3:00 Route 12 ghost).
-- [ ] M3-24 Implement **replay mode**: precompute the whole scripted timeline into a frame array (`ReplayTape`) and play it client-side with zero Firestore writes.
-- [ ] M3-25 Replay controls: play/pause/seek, speed 1×/2×; deterministic given the seed.
-- [ ] M3-26 Tests: incident fires at the right tick; replay tape equals live-sim output for the same seed; replay writes nothing to Firestore (mock).
+- [x] M3-23 Implement an `IncidentRunner` that applies `seed/incidents.json` events to the simulator at given offsets (t=2:00 Bus 23 stalls for 6 minutes; t=3:00 Route 12 ghost).
+- [x] M3-24 Implement **replay mode**: precompute the whole scripted timeline into a frame array (`ReplayTape`) and play it client-side with zero Firestore writes.
+- [x] M3-25 Replay controls: play/pause/seek, speed 1×/2×; deterministic given the seed.
+- [x] M3-26 Tests: incident fires at the right tick; replay tape equals live-sim output for the same seed; replay writes nothing to Firestore (mock).
 
 **Wire into live state and UI**
-- [ ] M3-27 Extend `stepSim` output to include `etas` (for stops that riders watch) and `alerts`; keep document size well under 1 MB (assert in a test).
+- [x] M3-27 Extend `stepSim` output to include `etas` (for stops that riders watch) and `alerts`; keep document size well under 1 MB (assert in a test).
 - [ ] M3-28 Add `AlertFeed` page (`/alerts`) with severity styling and language toggle for messages.
 - [ ] M3-29 Add `StopSheet` (tap a stop): next buses with `low–high` ETA, risk badge, "Why?" drawer with factor bars.
 - [ ] M3-30 Add `RiskBadge` with colour **and** text (Low/Medium/High) and an accessible label.
