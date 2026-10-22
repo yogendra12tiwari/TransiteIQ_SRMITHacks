@@ -1,6 +1,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isOperator() {
+      return request.auth != null && request.auth.token.role == "operator";
+    }
+
     // Static network data: public read, strictly immutable by clients
     match /stops/{id} {
       allow read: if true;
@@ -20,6 +24,17 @@ service cloud.firestore {
     match /history/{id} {
       allow read: if true;
       allow write: if false;
+    }
+
+    // Live simulator state & alerts: public read, operator-only write
+    match /sim/{doc} {
+      allow read: if true;
+      allow write: if isOperator();
+    }
+
+    match /alerts/{id} {
+      allow read: if true;
+      allow write: if isOperator();
     }
 
     // Default deny for all other collections until subsequent milestone rules are deployed
