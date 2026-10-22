@@ -642,11 +642,11 @@ Deploy: `firestore:rules`, `hosting`.
 - [x] M3-10 Print a one-line summary (`npm run eval:eta`) used later on a slide and dashboard card.
 
 **Wait-risk (`engine/risk.ts`)**
-- [ ] M3-11 Implement `waitRisk(stop, hour, expectedWaitMin, recentSafetyReports)` exactly as PRD §9.3.
-- [ ] M3-12 Implement `ruleExplanation(factors, expectedWaitMin, hour, lang)` in English and Hindi; template-based; never uses banned phrases.
-- [ ] M3-13 Tests with golden values: Stop A at 20:00 with 18 min wait and 7 reports ⇒ score ≈ 0.795, label High; Stop B with 4 min wait and 1 report ⇒ score ≈ 0.325, label Low.
-- [ ] M3-14 Tests: factors sum to score; label thresholds at 0.35 and 0.65; night factor changes at 19:00 and 06:00.
-- [ ] M3-15 Banned-phrase test over every explanation template.
+- [x] M3-11 Implement `waitRisk(stop, hour, expectedWaitMin, recentSafetyReports)` exactly as PRD §9.3.
+- [x] M3-12 Implement `ruleExplanation(factors, expectedWaitMin, hour, lang)` in English and Hindi; template-based; never uses banned phrases.
+- [x] M3-13 Tests with golden values: Stop A at 20:00 with 18 min wait and 7 reports ⇒ score ≈ 0.795, label High; Stop B with 4 min wait and 1 report ⇒ score ≈ 0.325, label Low.
+- [x] M3-14 Tests: factors sum to score; label thresholds at 0.35 and 0.65; night factor changes at 19:00 and 06:00.
+- [x] M3-15 Banned-phrase test over every explanation template.
 
 **Detectors (`engine/detectors.ts`)**
 - [ ] M3-16 Implement `detectDelay`: compare actual position with schedule-implied position; threshold N minutes (default 4).
