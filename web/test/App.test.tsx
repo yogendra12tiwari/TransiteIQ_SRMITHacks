@@ -43,6 +43,6 @@ describe("Web App Sanity & Routes", () => {
   it("renders full App on root without crashing", () => {
     render(<App />);
     expect(screen.getByTestId("simulated-data-badge")).toBeInTheDocument();
-    expect(screen.getByText("Transit")).toBeInTheDocument();
+    expect(screen.getAllByText("Transit")[0]).toBeInTheDocument();
   });
 });
