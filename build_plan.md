@@ -355,59 +355,59 @@ Every milestone follows the same loop: **write tests → implement → run emula
 #### Tasks
 
 **Repository and tooling**
-- [ ] M0-01 Create/confirm the GitHub repo `transitiq`; clone locally.
-- [ ] M0-02 Add `.gitignore` first (secrets, `node_modules`, `dist`, `lib`, `.firebase`, `*.log`, service-account patterns, `.env*`). Commit and push before anything else.
-- [ ] M0-03 Add `TRANSITIQ_PRD.md`, `TRANSITIQ_SPEC.md`, `build_plan.md` to the repo root.
-- [ ] M0-04 Create root `package.json` with npm workspaces (`shared`, `web`, `functions`), `engines.node >= 20`.
-- [ ] M0-05 Add `tsconfig.base.json` (strict, ES2022, `moduleResolution: bundler`, path alias `@transitiq/shared`).
-- [ ] M0-06 Add ESLint (typescript-eslint) and Prettier configs; add `npm run lint` and `npm run format:check`.
-- [ ] M0-07 Add Husky or a simple `pre-push` script that runs lint + typecheck + tests (optional; CI is the enforcement).
-- [ ] M0-08 Create the folder skeleton from §4 with `.gitkeep` files.
-- [ ] M0-09 Add `README.md` (what it is, quick start, links to PRD and build plan, "Simulated data" notice).
-- [ ] M0-10 Add `.github/pull_request_template.md` from §5.5.
+- [x] M0-01 Create/confirm the GitHub repo `transitiq`; clone locally.
+- [x] M0-02 Add `.gitignore` first (secrets, `node_modules`, `dist`, `lib`, `.firebase`, `*.log`, service-account patterns, `.env*`). Commit and push before anything else.
+- [x] M0-03 Add `TRANSITIQ_PRD.md`, `TRANSITIQ_SPEC.md`, `build_plan.md` to the repo root.
+- [x] M0-04 Create root `package.json` with npm workspaces (`shared`, `web`, `functions`), `engines.node >= 20`.
+- [x] M0-05 Add `tsconfig.base.json` (strict, ES2022, `moduleResolution: bundler`, path alias `@transitiq/shared`).
+- [x] M0-06 Add ESLint (typescript-eslint) and Prettier configs; add `npm run lint` and `npm run format:check`.
+- [x] M0-07 Add Husky or a simple `pre-push` script that runs lint + typecheck + tests (optional; CI is the enforcement).
+- [x] M0-08 Create the folder skeleton from §4 with `.gitkeep` files.
+- [x] M0-09 Add `README.md` (what it is, quick start, links to PRD and build plan, "Simulated data" notice).
+- [x] M0-10 Add `.github/pull_request_template.md` from §5.5.
 
 **Shared package**
-- [ ] M0-11 Scaffold `shared/` as `@transitiq/shared` (`package.json`, `tsconfig.json`, `src/index.ts`).
-- [ ] M0-12 Add Vitest to `shared/` and one sanity test.
-- [ ] M0-13 Install `zod` in `shared/`.
+- [x] M0-11 Scaffold `shared/` as `@transitiq/shared` (`package.json`, `tsconfig.json`, `src/index.ts`).
+- [x] M0-12 Add Vitest to `shared/` and one sanity test.
+- [x] M0-13 Install `zod` in `shared/`.
 
 **Web app**
-- [ ] M0-14 Scaffold `web/` with Vite + React + TypeScript.
-- [ ] M0-15 Add Tailwind CSS and base styles (mobile-first, high-contrast palette, focus rings).
-- [ ] M0-16 Add React Router with placeholder routes from PRD §13.2 (`/`, `/plan`, `/route/:id`, `/alerts`, `/report`, `/trip/:token`, `/dashboard`, `/demo`).
-- [ ] M0-17 Add `SimulatedDataBadge` component and render it in the app shell.
-- [ ] M0-18 Add Vitest + React Testing Library to `web/`; write a test that the badge renders on every route.
-- [ ] M0-19 Add a Vite alias for `@transitiq/shared`.
-- [ ] M0-20 Add `vite-plugin-pwa` with a minimal manifest (name TransitIQ, theme colour, icons placeholder).
+- [x] M0-14 Scaffold `web/` with Vite + React + TypeScript.
+- [x] M0-15 Add Tailwind CSS and base styles (mobile-first, high-contrast palette, focus rings).
+- [x] M0-16 Add React Router with placeholder routes from PRD §13.2 (`/`, `/plan`, `/route/:id`, `/alerts`, `/report`, `/trip/:token`, `/dashboard`, `/demo`).
+- [x] M0-17 Add `SimulatedDataBadge` component and render it in the app shell.
+- [x] M0-18 Add Vitest + React Testing Library to `web/`; write a test that the badge renders on every route.
+- [x] M0-19 Add a Vite alias for `@transitiq/shared`.
+- [x] M0-20 Add `vite-plugin-pwa` with a minimal manifest (name TransitIQ, theme colour, icons placeholder).
 
 **Functions**
-- [ ] M0-21 Scaffold `functions/` (TypeScript, 2nd gen, Node 20) with a single `health` callable that returns `{ ok: true }`.
-- [ ] M0-22 Add `tsup.config.ts` with `noExternal: ["@transitiq/shared"]` (Decision D4).
-- [ ] M0-23 Add a `predeploy` script that builds `shared` then bundles `functions`.
-- [ ] M0-24 Add Vitest to `functions/`; write a test for `health`.
-- [ ] M0-25 Write a test that the built `functions/lib` has no `workspace:` / `@transitiq/shared` import left unresolved.
+- [x] M0-21 Scaffold `functions/` (TypeScript, 2nd gen, Node 20) with a single `health` callable that returns `{ ok: true }`.
+- [x] M0-22 Add `tsup.config.ts` with `noExternal: ["@transitiq/shared"]` (Decision D4).
+- [x] M0-23 Add a `predeploy` script that builds `shared` then bundles `functions`.
+- [x] M0-24 Add Vitest to `functions/`; write a test for `health`.
+- [x] M0-25 Write a test that the built `functions/lib` has no `workspace:` / `@transitiq/shared` import left unresolved.
 
 **Firebase**
-- [ ] M0-26 Run `firebase login` (owner account from Q1) and `firebase init` for Hosting, Firestore, Functions, Emulators. Choose existing project `<FIREBASE_PROJECT_ID>`.
-- [ ] M0-27 Configure `firebase.json`: Hosting `public: web/dist`, SPA rewrite `** → /index.html`, headers (cache static assets, no-cache for `index.html` and service worker).
-- [ ] M0-28 Configure emulator ports (Auth 9099, Functions 5001, Firestore 8080, Hosting 5000, UI 4000) and `singleProjectMode`.
-- [ ] M0-29 Set Functions region `asia-south1` in code defaults.
-- [ ] M0-30 Create `firestore.rules` with **default deny** only, and an empty `firestore.indexes.json`.
-- [ ] M0-31 Enable Firestore (production mode), Anonymous Auth, and Google sign-in in the Firebase console (manual, record in docs).
-- [ ] M0-32 If Blaze is available: enable it and **set a budget alert** in Google Cloud (record threshold in docs).
-- [ ] M0-33 Create `web/src/firebase.ts` that initialises the SDK from `VITE_*` env vars and connects to emulators when `VITE_USE_EMULATORS=true`.
-- [ ] M0-34 Add `.env.example` with variable names only (no values).
+- [x] M0-26 Run `firebase login` (owner account from Q1) and `firebase init` for Hosting, Firestore, Functions, Emulators. Choose existing project `<FIREBASE_PROJECT_ID>`.
+- [x] M0-27 Configure `firebase.json`: Hosting `public: web/dist`, SPA rewrite `** → /index.html`, headers (cache static assets, no-cache for `index.html` and service worker).
+- [x] M0-28 Configure emulator ports (Auth 9099, Functions 5001, Firestore 8080, Hosting 5000, UI 4000) and `singleProjectMode`.
+- [x] M0-29 Set Functions region `asia-south1` in code defaults.
+- [x] M0-30 Create `firestore.rules` with **default deny** only, and an empty `firestore.indexes.json`.
+- [x] M0-31 Enable Firestore (production mode), Anonymous Auth, and Google sign-in in the Firebase console (manual, record in docs).
+- [x] M0-32 If Blaze is available: enable it and **set a budget alert** in Google Cloud (record threshold in docs).
+- [x] M0-33 Create `web/src/firebase.ts` that initialises the SDK from `VITE_*` env vars and connects to emulators when `VITE_USE_EMULATORS=true`.
+- [x] M0-34 Add `.env.example` with variable names only (no values).
 
 **CI/CD skeleton**
-- [ ] M0-35 Create `.github/workflows/ci.yml` with jobs: install, lint, typecheck, `test:web`, `test:shared`, `test:functions` (inside `emulators:exec`).
-- [ ] M0-36 Add the deploy job (runs on `main` only, needs `test`) using the service-account secret.
-- [ ] M0-37 Create a **deploy-only service account** in Google Cloud with least privilege; store JSON as GitHub Secret `FIREBASE_SERVICE_ACCOUNT`; store `FIREBASE_PROJECT_ID` as a secret. Never commit the key.
-- [ ] M0-38 Add a secret-scan step (for example gitleaks) to CI.
-- [ ] M0-39 Push and confirm CI is green.
+- [x] M0-35 Create `.github/workflows/ci.yml` with jobs: install, lint, typecheck, `test:web`, `test:shared`, `test:functions` (inside `emulators:exec`).
+- [x] M0-36 Add the deploy job (runs on `main` only, needs `test`) using the service-account secret.
+- [x] M0-37 Create a **deploy-only service account** in Google Cloud with least privilege; store JSON as GitHub Secret `FIREBASE_SERVICE_ACCOUNT`; store `FIREBASE_PROJECT_ID` as a secret. Never commit the key.
+- [x] M0-38 Add a secret-scan step (for example gitleaks) to CI.
+- [x] M0-39 Push and confirm CI is green.
 
 **First deploy**
-- [ ] M0-40 Build `web` and run `firebase deploy --only hosting`; confirm the placeholder at the live URL.
-- [ ] M0-41 Record the live URL in README and PRD header; add a changelog row.
+- [x] M0-40 Build `web` and run `firebase deploy --only hosting`; confirm the placeholder at the live URL.
+- [x] M0-41 Record the live URL in README and PRD header; add a changelog row.
 
 #### Files created or changed
 `.gitignore`, `package.json`, `tsconfig.base.json`, ESLint/Prettier configs, `README.md`, `.github/**`, `shared/**` (skeleton), `web/**` (skeleton), `functions/**` (skeleton), `firebase.json`, `.firebaserc`, `firestore.rules`, `firestore.indexes.json`, `.env.example`.

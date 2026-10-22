@@ -6,10 +6,10 @@
 | Product name | **TransitIQ** |
 | github | https://github.com/yogendra12tiwari |
 | Frontend | React (TypeScript, Vite) — responsive web app / PWA (mobile-first rider app, desktop authority dashboard, public trusted-contact page) |
-| Backend | Firebase only (project id: `<FIREBASE_PROJECT_ID>` — fill in; owner account: `<FIREBASE_OWNER_EMAIL>` — the email used to log in to Firebase) — **TypeScript** Cloud Functions + **Genkit**, **zod** schemas (§7.0). No Python. |
-| Live URL | `https://<FIREBASE_PROJECT_ID>.web.app` (Firebase Hosting site, deploy target `hosting`) |
+| Backend | Firebase only (project id: `transiteiq` — fill in; owner account: `yogendra12tiwari@gmail.com` — the email used to log in to Firebase) — **TypeScript** Cloud Functions + **Genkit**, **zod** schemas (§7.0). No Python. |
+| Live URL | `https://transiteiq.web.app` (Firebase Hosting site, deploy target `hosting`) |
 | Prototype city | Lucknow, India (simulated bus fleet, simulated data, labelled as such everywhere in the UI) |
-| Doc version | v1.0.1 (draft) |
+| Doc version | v1.0.2 |
 | Last updated | 2026-10-23 |
 | Status | Draft — open questions in §17 must be resolved before build starts |
 
@@ -392,7 +392,7 @@ Rule tests (Emulator Suite) are mandatory: riders cannot read `reports`; no clie
 `reports` by (`stopId`, `createdAt desc`); (`category`, `createdAt desc`); `clusters` by (`stopId`, `count desc`). Declared in `firestore.indexes.json`.
 
 ### 7.4 Operator role
-Dashboard and demo controller require Firebase Auth login (email/Google). A setup script (`functions/scripts/grantOperator.ts`) sets custom claim `role: "operator"` for allow-listed emails (initially `<FIREBASE_OWNER_EMAIL>`). Riders use **Anonymous Auth** only (rotating anonymous UID; never linked to identity).
+Dashboard and demo controller require Firebase Auth login (email/Google). A setup script (`functions/scripts/grantOperator.ts`) sets custom claim `role: "operator"` for allow-listed emails (initially `yogendra12tiwari@gmail.com`). Riders use **Anonymous Auth** only (rotating anonymous UID; never linked to identity).
 
 ---
 
@@ -655,7 +655,7 @@ transitiq/
 ├─ README.md
 ├─ .gitignore                 # .env*, service accounts, node_modules, dist, firebase-debug.log
 ├─ firebase.json              # hosting, functions, firestore, emulators
-├─ .firebaserc                # { "projects": { "default": "<FIREBASE_PROJECT_ID>" } }
+├─ .firebaserc                # { "projects": { "default": "transiteiq" } }
 ├─ firestore.rules
 ├─ firestore.indexes.json
 ├─ prompts/                   # versioned prompts (§10.2)
@@ -676,7 +676,7 @@ transitiq/
 | Env | Purpose |
 |---|---|
 | Local | Firebase Emulator Suite (Auth, Firestore, Functions, Hosting); `seedFirestore` against emulator |
-| Production | Firebase project `<FIREBASE_PROJECT_ID>`; live URL on Hosting |
+| Production | Firebase project `transiteiq`; live URL on Hosting |
 
 ### 16.3 Deploy targets
 `firebase deploy --only hosting` · `functions` · `firestore:rules` · `firestore:indexes` — deploy only what changed (rule §0.1).
@@ -722,7 +722,7 @@ GitHub Secrets: `FIREBASE_SERVICE_ACCOUNT`, `FIREBASE_PROJECT_ID`. Firebase Secr
 
 | # | Question | Default if unanswered |
 |---|---|---|
-| Q1 | Firebase project ID and owner email (login account) | Placeholders `<FIREBASE_PROJECT_ID>`, `<FIREBASE_OWNER_EMAIL>` |
+| Q1 | Firebase project ID and owner email (login account) | Placeholders `transiteiq`, `yogendra12tiwari@gmail.com` |
 | Q2 | Is the Blaze plan (billing card) available? If not, drop Cloud Functions/Genkit and run triage, rate-limit-less report writes via client rules and rule-based logic only | Assume Blaze with a budget alert |
 | Q3 | Functions region: `asia-south1` (Mumbai) vs other | `asia-south1` |
 | Q4 | Which LLM/model and API key for Genkit (Gemini via Google AI Studio?) | Gemini via `@genkit-ai/googleai` |
@@ -740,7 +740,7 @@ GitHub Secrets: `FIREBASE_SERVICE_ACCOUNT`, `FIREBASE_PROJECT_ID`. Firebase Secr
 | Version | Date | Change |
 |---|---|---|
 | v1.0.0 (draft) | 2026-10-23 | First full PRD for TransitIQ: problem, solution, features, core MVP, Firebase-only architecture (Hosting, Firestore, Functions, Auth), zod schemas, Genkit flows with guardrails, simulator, CI/CD, testing, open questions. Adopts the commit/push/deploy-after-every-update rule. |
-| v1.0.1 (draft) | 2026-10-23 | Renamed product from SafeRide AI to TransitIQ (docs, repo folder name, file names). No scope change. |
+| v1.0.2 | 2026-10-23 | Renamed product from SafeRide AI to TransitIQ (docs, repo folder name, file names). No scope change. |
 
 *(Append a row on every scope, design, or decision change — and push it.)*
 
@@ -847,4 +847,6 @@ Each milestone ends with: tests green → commit → push → deploy (§0). No n
 8. Label all data as simulated in the UI. Never use the words "crime", "dangerous area" or victim-blaming language anywhere in the product.
 9. After each milestone, run the app against the emulators, verify the "Done when" condition, update the changelog (§18), push, deploy, and summarize what works before continuing.
 10. Do not add features outside §5.2 before the scope freeze after M6.
+
+
 
