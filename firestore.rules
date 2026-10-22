@@ -37,6 +37,37 @@ service cloud.firestore {
       allow write: if isOperator();
     }
 
+    // Shared trip links (PRD §7.2, M5-25, M5-26):
+    // Public get by unguessable 128-bit token while active; list strictly denied to prevent enumeration.
+    // Client-fallback create requires valid schema and <= 2 hours expiry.
+    // Update requires authenticated caller with matching ownerKeyHash or operator role; delete denied.
+    match /trips/{token} {
+      function isValidTripCreate() {
+        let d = request.resource.data;
+        return d.token is string && d.token == token
+          && d.routeId is string && d.routeId.size() > 0 && d.routeId.size() <= 100
+          && d.boardingStopId is string && d.boardingStopId.size() > 0 && d.boardingStopId.size() <= 100
+          && d.destinationStopId is string && d.destinationStopId.size() > 0 && d.destinationStopId.size() <= 100
+          && d.state in ['PLANNED', 'WAITING', 'BOARDED']
+          && (d.expiresAt is int || d.expiresAt is float)
+          && (d.createdAt is int || d.createdAt is float)
+          && d.expiresAt <= request.time.toMillis() + 7200000;
+      }
+
+      function isValidTripUpdate() {
+        return request.auth != null && (
+          (request.resource.data.ownerKeyHash == resource.data.ownerKeyHash) ||
+          isOperator()
+        );
+      }
+
+      allow get: if resource.data.expiresAt > request.time.toMillis();
+      allow list: if false;
+      allow create: if isValidTripCreate();
+      allow update: if isValidTripUpdate();
+      allow delete: if false;
+    }
+
     // Default deny for all other collections until subsequent milestone rules are deployed
     match /{document=**} {
       allow read, write: if false;

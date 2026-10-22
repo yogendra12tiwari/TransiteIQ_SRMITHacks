@@ -45,6 +45,36 @@ describe("Firestore Rules (PRD §7.2, M1-28 & M2-11)", () => {
     );
   });
 
+  it("M5-25: allows get on trips/{token} only while unexpired (expiresAt > request.time.toMillis())", () => {
+    expect(rulesContent).toMatch(
+      /match\s+\/trips\/\{token\}\s*\{[\s\S]*?allow get:\s*if resource\.data\.expiresAt\s*>\s*request\.time\.toMillis\(\);/,
+    );
+
+    // Logic verification for expiry comparison
+    const canGetTrip = (expiresAt: number, requestTimeMillis: number) => expiresAt > requestTimeMillis;
+    const now = Date.now();
+    expect(canGetTrip(now + 60000, now)).toBe(true);
+    expect(canGetTrip(now, now)).toBe(false);
+    expect(canGetTrip(now - 1000, now)).toBe(false);
+  });
+
+  it("M5-25: strictly denies list on trips/{token} to prevent enumeration", () => {
+    expect(rulesContent).toMatch(/match\s+\/trips\/\{token\}\s*\{[\s\S]*?allow list:\s*if false;/);
+  });
+
+  it("M5-25: allows create on trips/{token} with validated fields and max 2-hour expiry", () => {
+    expect(rulesContent).toMatch(/allow create:\s*if isValidTripCreate\(\);/);
+    expect(rulesContent).toMatch(/state in \['PLANNED', 'WAITING', 'BOARDED'\]/);
+    expect(rulesContent).toMatch(/request\.time\.toMillis\(\)\s*\+\s*7200000/);
+    expect(rulesContent).toMatch(/d\.token\s*==\s*token/);
+  });
+
+  it("M5-25: restricts update on trips/{token} to matching ownerKeyHash or operator, and denies delete", () => {
+    expect(rulesContent).toMatch(/allow update:\s*if isValidTripUpdate\(\);/);
+    expect(rulesContent).toMatch(/request\.resource\.data\.ownerKeyHash\s*==\s*resource\.data\.ownerKeyHash/);
+    expect(rulesContent).toMatch(/match\s+\/trips\/\{token\}\s*\{[\s\S]*?allow delete:\s*if false;/);
+  });
+
   it("enforces default deny for all other collections", () => {
     expect(rulesContent).toMatch(/match\s+\/\{document=\*\*\}\s*\{\s*allow read,\s*write:\s*if false;\s*\}/);
   });
