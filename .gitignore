@@ -1,0 +1,59 @@
+# ---- Secrets (never commit) ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+# service-account / credential JSON patterns
+*service-account*.json
+*serviceAccount*.json
+*-sa.json
+*credentials*.json
+*firebase-adminsdk*.json
+gha-creds-*.json
+.runtimeconfig.json
+.secret.local
+
+# ---- Dependencies ----
+node_modules/
+.pnp
+.pnp.js
+
+# ---- Build output ----
+dist/
+dist-ssr/
+# compiled output only (src/lib folders must stay tracked)
+/functions/lib/
+/shared/lib/
+coverage/
+*.tsbuildinfo
+dev-dist/
+
+# ---- Firebase ----
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+database-debug.log*
+pubsub-debug.log*
+emulator-data/
+
+# ---- Logs ----
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- Editor / OS ----
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# ---- Test artefacts ----
+playwright-report/
+test-results/
