@@ -16,9 +16,22 @@
   "scripts": {
     "build": "npm run build --workspace shared --if-present && npm run build --workspace web --if-present && npm run build --workspace functions --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
     "test": "npm run test:shared && npm run test:web && npm run test:functions",
     "test:shared": "npm test --workspace shared --if-present",
     "test:web": "npm test --workspace web --if-present",
     "test:functions": "npm test --workspace functions --if-present"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "eslint": "^9.20.1",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^15.15.0",
+    "prettier": "^3.5.1",
+    "typescript": "~5.7.3",
+    "typescript-eslint": "^8.24.0"
   }
 }

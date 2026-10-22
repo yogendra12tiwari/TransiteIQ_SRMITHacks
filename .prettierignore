@@ -1,0 +1,12 @@
+node_modules
+dist
+dev-dist
+coverage
+functions/lib
+shared/lib
+.firebase
+package-lock.json
+# source-of-truth docs are kept exactly as authored
+TRANSITIQ_PRD.md
+TRANSITIQ_SPEC.md
+build_plan.md
