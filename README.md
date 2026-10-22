@@ -4,7 +4,9 @@
 > **Notice: 100% simulated fleet & data for Lucknow prototype.**
 
 ## Overview
+
 TransitIQ is a real-time public-transport intelligence platform:
+
 - **Live Bus Tracking & ETA with Uncertainty Range**
 - **Safe Wait Mode ("Leave now" notification)**
 - **Safer Route Mode (exposure-based ranking & fastest vs safer comparison)**
@@ -12,11 +14,13 @@ TransitIQ is a real-time public-transport intelligence platform:
 - **Anonymous Reporting & Authority Dashboard**
 
 ## Primary Documentation
+
 - [Product Requirements Document (PRD)](./TRANSITIQ_PRD.md)
 - [Technical Specification](./TRANSITIQ_SPEC.md)
 - [Task-by-Task Build Plan](./build_plan.md)
 
 ## Docs
+
 - [Architecture](./docs/architecture.md)
 - [Privacy & Ethics](./docs/privacy-and-ethics.md)
 - [Demo Script](./docs/demo-script.md)
@@ -24,6 +28,7 @@ TransitIQ is a real-time public-transport intelligence platform:
 - [User Research Notes](./docs/user-research-notes.md)
 
 ## Quick Start
+
 ```bash
 # Install dependencies across all workspaces
 npm install
