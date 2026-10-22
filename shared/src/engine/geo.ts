@@ -18,10 +18,7 @@ export function haversineM(p1: LatLngTuple, p2: LatLngTuple): number {
 
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRadians(lat1)) *
-      Math.cos(toRadians(lat2)) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return EARTH_RADIUS_M * c;
@@ -47,10 +44,7 @@ export function polylineLengthM(polyline: LatLngTuple[]): number {
  * Interpolates [lat, lng] at a given distance along a polyline.
  * Clamps to start or end if distance is out of bounds.
  */
-export function pointAtDistance(
-  polyline: LatLngTuple[],
-  distanceM: number,
-): LatLngTuple {
+export function pointAtDistance(polyline: LatLngTuple[], distanceM: number): LatLngTuple {
   if (polyline.length === 0) {
     throw new Error("Polyline must have at least one point");
   }
@@ -81,10 +75,7 @@ export function pointAtDistance(
 /**
  * Finds the approximate distance along the polyline to the point closest to the given coordinate.
  */
-export function distanceAlongRoute(
-  polyline: LatLngTuple[],
-  target: LatLngTuple,
-): number {
+export function distanceAlongRoute(polyline: LatLngTuple[], target: LatLngTuple): number {
   if (polyline.length < 2) return 0;
 
   let minDistanceToPoint = Infinity;

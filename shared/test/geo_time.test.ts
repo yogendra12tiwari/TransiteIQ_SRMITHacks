@@ -29,11 +29,7 @@ describe("Geo Helpers (engine/geo.ts)", () => {
   });
 
   it("calculates total length of a polyline", () => {
-    const polyline: [number, number][] = [
-      charbagh,
-      hazratganj,
-      [26.855, 80.96],
-    ];
+    const polyline: [number, number][] = [charbagh, hazratganj, [26.855, 80.96]];
     const total = polylineLengthM(polyline);
     const seg1 = haversineM(charbagh, hazratganj);
     const seg2 = haversineM(hazratganj, [26.855, 80.96]);

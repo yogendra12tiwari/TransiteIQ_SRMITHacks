@@ -1,11 +1,6 @@
 import type { Route } from "../schemas/network.js";
 
-export type DayPeriod =
-  | "morning_peak"
-  | "midday"
-  | "evening_peak"
-  | "late_evening"
-  | "offpeak";
+export type DayPeriod = "morning_peak" | "midday" | "evening_peak" | "late_evening" | "offpeak";
 
 /**
  * Converts epoch timestamp in ms to Indian Standard Time (UTC+5:30) date parts.

@@ -18,7 +18,7 @@ export const validRoute = {
   polyline: [
     [26.84, 80.94],
     [26.85, 80.95],
-  ],
+  ] as [number, number][],
   headwayMin: {
     peak: 10,
     offpeak: 15,
