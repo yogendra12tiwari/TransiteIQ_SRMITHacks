@@ -5,6 +5,15 @@ import "leaflet/dist/leaflet.css";
 import type { Route, Stop, Bus, Alert, EtaResult } from "@transitiq/shared";
 import { StopSheet } from "./StopSheet";
 
+export interface OverlayRoute {
+  id: string;
+  color: string;
+  polyline: [number, number][];
+  name?: string;
+  dashArray?: string;
+  weight?: number;
+}
+
 export interface MapViewProps {
   routes: Route[];
   stops: Stop[];
@@ -13,6 +22,9 @@ export interface MapViewProps {
   alerts?: Alert[];
   isStale?: boolean;
   followedStopId?: string;
+  overlayRoutes?: OverlayRoute[];
+  originCoord?: [number, number];
+  destinationCoord?: [number, number];
   onBusSelect?: (bus: Bus) => void;
   onStopSelect?: (stop: Stop) => void;
 }
@@ -60,6 +72,9 @@ export function MapView({
   alerts = [],
   isStale = false,
   followedStopId,
+  overlayRoutes = [],
+  originCoord,
+  destinationCoord,
   onBusSelect,
   onStopSelect,
 }: MapViewProps) {
@@ -254,6 +269,55 @@ export function MapView({
               />
             );
           })}
+
+          {/* Overlay Route Polylines (e.g., Planner Comparison M4-20) */}
+          {overlayRoutes.map((over) => (
+            <Polyline
+              key={over.id}
+              positions={over.polyline}
+              pathOptions={{
+                color: over.color,
+                weight: over.weight ?? 6,
+                dashArray: over.dashArray,
+                opacity: 0.95,
+              }}
+            />
+          ))}
+
+          {/* Origin and Destination Markers */}
+          {originCoord && (
+            <CircleMarker
+              center={originCoord}
+              radius={8}
+              pathOptions={{
+                color: "#3b82f6",
+                fillColor: "#60a5fa",
+                fillOpacity: 1,
+                weight: 3,
+              }}
+            >
+              <Popup className="transitiq-popup">
+                <div className="text-xs font-bold text-slate-900 p-1">Trip Origin</div>
+              </Popup>
+            </CircleMarker>
+          )}
+
+          {destinationCoord && (
+            <CircleMarker
+              center={destinationCoord}
+              radius={8}
+              pathOptions={{
+                color: "#10b981",
+                fillColor: "#34d399",
+                fillOpacity: 1,
+                weight: 3,
+              }}
+            >
+              <Popup className="transitiq-popup">
+                <div className="text-xs font-bold text-slate-900 p-1">Trip Destination</div>
+              </Popup>
+            </CircleMarker>
+          )}
 
           {/* Stops Circle Markers */}
           {stops.map((stop) => {

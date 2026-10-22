@@ -4,6 +4,7 @@ import { RequireOperator } from "./components/RequireOperator";
 import { HomePage } from "./pages/Home";
 import { DemoPage } from "./pages/Demo";
 import { AlertsPage } from "./pages/Alerts";
+import { PlanPage } from "./pages/Plan";
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -39,15 +40,6 @@ function Layout({ children }: { children: React.ReactNode }) {
       <footer className="border-t border-slate-800 p-4 text-center text-xs text-slate-400">
         TransitIQ — Prototype for Lucknow (Simulated Data). All routes, buses, and reports are simulated.
       </footer>
-    </div>
-  );
-}
-
-function PlanPage() {
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Route Planner</h1>
-      <p className="text-slate-300">Compare fastest vs safer routes with exposure minutes.</p>
     </div>
   );
 }
