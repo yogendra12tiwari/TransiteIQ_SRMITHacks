@@ -543,50 +543,50 @@ Deploy: `firestore:rules`, `firestore:indexes`, `hosting`.
 #### Tasks
 
 **Simulator engine (`shared/engine/simulator.ts`)**
-- [ ] M2-01 Define `SimState` (buses, simTimeMs, tick, rngState, scenario).
-- [ ] M2-02 Implement `initSim(network, hour, rngSeed)`: spawn buses per route according to `headwayMin(hour)` so spacing matches the period.
-- [ ] M2-03 Implement `stepSim(state, dtSec, network)`: advance `distanceAlongRouteM += speedMps × dt`; wrap/finish at route end (turnaround → reverse direction or respawn).
-- [ ] M2-04 Speed model: `speed = baseSpeed × trafficFactor(hour) × (1 + noise)` with noise from an injected seeded RNG, clamped.
-- [ ] M2-05 Compute `lat/lng` per bus with `pointAtDistance`.
-- [ ] M2-06 Dwell at stops for 15–30 s (configurable) so ETAs have realistic jitter.
-- [ ] M2-07 Output a `SimLive` object (schema-validated) containing buses, simTime, hour, tick; ETAs and alerts arrive in M3.
-- [ ] M2-08 Determinism tests: same seed + same steps ⇒ identical state.
-- [ ] M2-09 Tests: buses never leave the polyline, speed within bounds, headway spacing per period (±20%).
-- [ ] M2-10 Tests: night period has fewer buses than peak.
+- [x] M2-01 Define `SimState` (buses, simTimeMs, tick, rngState, scenario).
+- [x] M2-02 Implement `initSim(network, hour, rngSeed)`: spawn buses per route according to `headwayMin(hour)` so spacing matches the period.
+- [x] M2-03 Implement `stepSim(state, dtSec, network)`: advance `distanceAlongRouteM += speedMps × dt`; wrap/finish at route end (turnaround → reverse direction or respawn).
+- [x] M2-04 Speed model: `speed = baseSpeed × trafficFactor(hour) × (1 + noise)` with noise from an injected seeded RNG, clamped.
+- [x] M2-05 Compute `lat/lng` per bus with `pointAtDistance`.
+- [x] M2-06 Dwell at stops for 15–30 s (configurable) so ETAs have realistic jitter.
+- [x] M2-07 Output a `SimLive` object (schema-validated) containing buses, simTime, hour, tick; ETAs and alerts arrive in M3.
+- [x] M2-08 Determinism tests: same seed + same steps ⇒ identical state.
+- [x] M2-09 Tests: buses never leave the polyline, speed within bounds, headway spacing per period (±20%).
+- [x] M2-10 Tests: night period has fewer buses than peak.
 
 **Firestore rules (branch `feat/rules-sim`)**
-- [ ] M2-11 Add `sim/{doc}` public read, operator-only write; `alerts/{id}` public read, operator-only write.
-- [ ] M2-12 Rules tests: anonymous user cannot write `sim/live`; operator can; public can read.
+- [x] M2-11 Add `sim/{doc}` public read, operator-only write; `alerts/{id}` public read, operator-only write.
+- [x] M2-12 Rules tests: anonymous user cannot write `sim/live`; operator can; public can read.
 
 **Operator auth**
-- [ ] M2-13 Implement `scripts/grant-operator.ts` (admin SDK sets custom claim `role: "operator"` for allow-listed emails; reads the allow-list from an env var, not from code).
-- [ ] M2-14 Implement Google sign-in UI (`useOperator` hook) that refreshes the ID token and checks the claim.
-- [ ] M2-15 `RequireOperator` route guard component with a friendly "Operator access only" screen.
-- [ ] M2-16 Run the grant script once for `<FIREBASE_OWNER_EMAIL>` against production (record the date in docs, not the token).
+- [x] M2-13 Implement `scripts/grant-operator.ts` (admin SDK sets custom claim `role: "operator"` for allow-listed emails; reads the allow-list from an env var, not from code).
+- [x] M2-14 Implement Google sign-in UI (`useOperator` hook) that refreshes the ID token and checks the claim.
+- [x] M2-15 `RequireOperator` route guard component with a friendly "Operator access only" screen.
+- [x] M2-16 Run the grant script once for `<FIREBASE_OWNER_EMAIL>` against production (record the date in docs, not the token).
 
 **Demo controller (`/demo`)**
-- [ ] M2-17 Build the Demo page: Start, Pause, Reset, speed multiplier (1×, 2×, 5×), scenario (live/replay), hour selector.
-- [ ] M2-18 Run the loop with a fixed 2 s tick (accumulate dt so tab throttling does not break movement).
-- [ ] M2-19 Write `sim/live` each tick with `setDoc`; validate with `SimLive.parse` first.
-- [ ] M2-20 Add a **write counter** and a 10-minute auto-stop with a visible countdown; show a warning at 80% of the daily budget estimate (20k writes).
-- [ ] M2-21 Add a "single-tab" guard (`BroadcastChannel`) so two controllers cannot write at once.
-- [ ] M2-22 Tests: controller refuses to write when not operator; auto-stop fires at 10 minutes (fake timers); write counter increments.
+- [x] M2-17 Build the Demo page: Start, Pause, Reset, speed multiplier (1×, 2×, 5×), scenario (live/replay), hour selector.
+- [x] M2-18 Run the loop with a fixed 2 s tick (accumulate dt so tab throttling does not break movement).
+- [x] M2-19 Write `sim/live` each tick with `setDoc`; validate with `SimLive.parse` first.
+- [x] M2-20 Add a **write counter** and a 10-minute auto-stop with a visible countdown; show a warning at 80% of the daily budget estimate (20k writes).
+- [x] M2-21 Add a "single-tab" guard (`BroadcastChannel`) so two controllers cannot write at once.
+- [x] M2-22 Tests: controller refuses to write when not operator; auto-stop fires at 10 minutes (fake timers); write counter increments.
 
 **Rider live map**
-- [ ] M2-23 Install `leaflet` and `react-leaflet`; add OSM tile layer with attribution.
-- [ ] M2-24 Implement `useLiveState` (Firestore `onSnapshot` on `sim/live`, with loading/error/stale states; marks data stale after 8 s without updates).
-- [ ] M2-25 Implement `MapView`: draws routes (polylines in route colours), stops (circle markers), buses (icons with heading).
-- [ ] M2-26 Smooth bus movement by interpolating between consecutive snapshots (linear tween over the tick length).
-- [ ] M2-27 Bus tap opens a bottom sheet: route name, direction, status, next stops.
-- [ ] M2-28 Route legend with toggles; "Stale data" banner when the feed pauses.
-- [ ] M2-29 `PhoneFrame` component wraps the rider UI on desktop widths (≥ 768 px).
-- [ ] M2-30 Tests: `useLiveState` handles snapshot updates, errors, stale detection; `MapView` renders N bus markers for N buses.
+- [x] M2-23 Install `leaflet` and `react-leaflet`; add OSM tile layer with attribution.
+- [x] M2-24 Implement `useLiveState` (Firestore `onSnapshot` on `sim/live`, with loading/error/stale states; marks data stale after 8 s without updates).
+- [x] M2-25 Implement `MapView`: draws routes (polylines in route colours), stops (circle markers), buses (icons with heading).
+- [x] M2-26 Smooth bus movement by interpolating between consecutive snapshots (linear tween over the tick length).
+- [x] M2-27 Bus tap opens a bottom sheet: route name, direction, status, next stops.
+- [x] M2-28 Route legend with toggles; "Stale data" banner when the feed pauses.
+- [x] M2-29 `PhoneFrame` component wraps the rider UI on desktop widths (≥ 768 px).
+- [x] M2-30 Tests: `useLiveState` handles snapshot updates, errors, stale detection; `MapView` renders N bus markers for N buses.
 
 **Deploy and verify**
-- [ ] M2-31 `firebase deploy --only firestore:rules,hosting`.
-- [ ] M2-32 Manual: open `/demo` as operator, start the sim; open `/` in another window and watch buses move.
-- [ ] M2-33 Manual: sign out, confirm `/demo` is blocked and `sim/live` cannot be written from the console.
-- [ ] M2-34 Measure writes per minute in the Firestore usage tab; record in docs.
+- [x] M2-31 `firebase deploy --only firestore:rules,hosting`.
+- [x] M2-32 Manual: open `/demo` as operator, start the sim; open `/` in another window and watch buses move.
+- [x] M2-33 Manual: sign out, confirm `/demo` is blocked and `sim/live` cannot be written from the console.
+- [x] M2-34 Measure writes per minute in the Firestore usage tab; record in docs.
 
 #### Files created or changed
 `shared/src/engine/simulator.ts`, `web/src/pages/{Home,Demo}.tsx`, `web/src/components/{MapView,PhoneFrame,RequireOperator,SimControls}.tsx`, `web/src/hooks/{useLiveState,useOperator}.ts`, `firestore.rules`, `scripts/grant-operator.ts`, tests.
@@ -614,8 +614,8 @@ docs: record write budget measurements and changelog v1.0.4
 Deploy: `firestore:rules`, `hosting`.
 
 #### M2 exit checklist
-- [ ] All M2 tasks ticked, PRs merged.
-- [ ] Screen recording (30 s) of moving buses saved locally (not committed if large).
+- [x] All M2 tasks ticked, PRs merged.
+- [x] Screen recording (30 s) of moving buses saved locally (not committed if large).
 
 ---
 

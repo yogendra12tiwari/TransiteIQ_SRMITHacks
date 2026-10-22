@@ -35,6 +35,14 @@ async function setCustomClaimRest(
 
   if (!lookupRes.ok) {
     const text = await lookupRes.text();
+    if (text.includes("CONFIGURATION_NOT_FOUND")) {
+      console.warn(
+        `Firebase Authentication is not yet activated on project "${projectId}".\n` +
+          `To activate: Open https://console.firebase.google.com/project/${projectId}/authentication -> Click "Get Started" -> Enable Google Sign-In.\n` +
+          `Once enabled, re-run "npm run grant:operator" to assign the operator role to ${email}.`,
+      );
+      return;
+    }
     throw new Error(`User lookup failed for ${email} (${lookupRes.status}): ${text}`);
   }
 

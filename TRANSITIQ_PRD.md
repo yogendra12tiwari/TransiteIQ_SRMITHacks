@@ -742,6 +742,7 @@ GitHub Secrets: `FIREBASE_SERVICE_ACCOUNT`, `FIREBASE_PROJECT_ID`. Firebase Secr
 | v1.0.0 (draft) | 2026-10-23 | First full PRD for TransitIQ: problem, solution, features, core MVP, Firebase-only architecture (Hosting, Firestore, Functions, Auth), zod schemas, Genkit flows with guardrails, simulator, CI/CD, testing, open questions. Adopts the commit/push/deploy-after-every-update rule. |
 | v1.0.2 | 2026-10-23 | Renamed product from SafeRide AI to TransitIQ (docs, repo folder name, file names). No scope change. |
 | v1.0.3 | 2026-10-23 | Milestone M1 completed: Added Zod schemas with no-PII assertions, geo/time engines, Lucknow seed datasets (stops, routes, safe spots, history, reports, incidents), verification suite, idempotent Firestore seeding script, and Firestore public-read rules with rules unit testing. Live stop count verified on hosting. |
+| v1.0.4 | 2026-10-23 | Milestone M2 completed: Implemented deterministic transit fleet simulator engine with seeded Mulberry32 PRNG and dwell model; deployed operator-only Firestore rules for sim and alerts; added operator auth and RequireOperator route guard; built /demo controller with 10-minute auto-stop and write budget tracking; added Leaflet MapView with OSM attribution, smooth 60fps bus interpolation, route filtering, bus detail bottom sheet, and PhoneFrame layout on desktop. |
 
 *(Append a row on every scope, design, or decision change — and push it.)*
 
