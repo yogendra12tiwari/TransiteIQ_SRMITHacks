@@ -20,6 +20,7 @@
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "verify:seed": "tsx scripts/verify-seed.ts",
+    "verify:demo": "tsx scripts/verify-demo.ts",
     "seed:emulator": "tsx functions/src/scripts/seedFirestore.ts",
     "seed:prod": "tsx functions/src/scripts/seedFirestore.ts --prod",
     "grant:operator": "tsx scripts/grant-operator.ts",
