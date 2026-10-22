@@ -673,9 +673,9 @@ Deploy: `firestore:rules`, `hosting`.
 - [x] M3-33 Add a visible "Replay" chip when `scenario = replay`.
 
 **Deploy and verify**
-- [ ] M3-34 `firebase deploy --only hosting`.
-- [ ] M3-35 Manual: run the scripted scenario; verify Bus 23 stall → `STALL` → `LIKELY_SKIP` at Stop A; ghost bus appears; ETAs update.
-- [ ] M3-36 Manual: switch to replay; confirm no writes in the Firestore usage tab.
+- [x] M3-34 `firebase deploy --only hosting`.
+- [x] M3-35 Manual: run the scripted scenario; verify Bus 23 stall → `STALL` → `LIKELY_SKIP` at Stop A; ghost bus appears; ETAs update.
+- [x] M3-36 Manual: switch to replay; confirm no writes in the Firestore usage tab.
 
 #### Files created or changed
 `shared/src/engine/{eta,risk,detectors,explain}.ts`, `shared/src/i18n/{en,hi}.json`, `functions/src/eval/etaMae.ts`, `web/src/pages/Alerts.tsx`, `web/src/components/{StopSheet,RiskBadge,AlertFeed}.tsx`, replay module, tests.
@@ -705,8 +705,8 @@ docs: changelog v1.0.5 for m3
 Deploy: `hosting`.
 
 #### M3 exit checklist
-- [ ] All M3 tasks ticked, changelog updated.
-- [ ] MAE line copied into `docs/judge-qa.md`.
+- [x] All M3 tasks ticked, changelog updated.
+- [x] MAE line copied into `docs/judge-qa.md`.
 
 ---
 ### M4 — Route planner and ranker (the visual centerpiece)
