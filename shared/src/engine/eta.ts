@@ -9,6 +9,18 @@ export interface EtaHistory {
   [stopId: string]: unknown;
 }
 
+export const SCHEDULED_AVG_SPEED_MPS = 8.33; // ~30 km/h nominal schedule speed
+
+/**
+ * Naive schedule-only baseline ETA per M3-07.
+ * Computes scheduled travel time purely from distance and nominal speed,
+ * ignoring dynamic traffic, EMA speed, and stop-specific variances.
+ */
+export function etaBaseline(distM: number, scheduledSpeedMps = SCHEDULED_AVG_SPEED_MPS): number {
+  if (distM <= 0) return 0;
+  return Math.round((distM / scheduledSpeedMps / 60) * 10) / 10;
+}
+
 /**
  * Computes the distance (in meters) along a route's polyline from a bus to a target stop.
  * Returns null if:

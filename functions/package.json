@@ -11,6 +11,7 @@
     "build": "tsup",
     "predeploy": "npm run build --workspace shared --if-present && npm run build",
     "test": "vitest run",
+    "eval:eta": "tsx src/eval/etaMae.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

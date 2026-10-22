@@ -23,6 +23,7 @@
     "seed:emulator": "tsx functions/src/scripts/seedFirestore.ts",
     "seed:prod": "tsx functions/src/scripts/seedFirestore.ts --prod",
     "grant:operator": "tsx scripts/grant-operator.ts",
+    "eval:eta": "tsx functions/src/eval/etaMae.ts",
     "test": "npm run test:shared && npm run test:web && npm run test:functions",
     "test:shared": "npm test --workspace shared --if-present",
     "test:web": "npm test --workspace web --if-present",

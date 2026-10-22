@@ -636,10 +636,10 @@ Deploy: `firestore:rules`, `hosting`.
 - [x] M3-06 Property test: `lowMin <= meanMin <= highMin` always.
 
 **Baseline and evaluation**
-- [ ] M3-07 Implement a naive schedule-only baseline ETA (distance / scheduled average speed).
-- [ ] M3-08 Implement `eval/etaMae.ts`: replay simulated history, compute MAE for model vs baseline, and coverage of the 80% band.
-- [ ] M3-09 Test: model MAE ≤ 0.7 × baseline MAE on the seed history (target from PRD §3.3); fail the build if not.
-- [ ] M3-10 Print a one-line summary (`npm run eval:eta`) used later on a slide and dashboard card.
+- [x] M3-07 Implement a naive schedule-only baseline ETA (distance / scheduled average speed).
+- [x] M3-08 Implement `eval/etaMae.ts`: replay simulated history, compute MAE for model vs baseline, and coverage of the 80% band.
+- [x] M3-09 Test: model MAE ≤ 0.7 × baseline MAE on the seed history (target from PRD §3.3); fail the build if not.
+- [x] M3-10 Print a one-line summary (`npm run eval:eta`) used later on a slide and dashboard card.
 
 **Wait-risk (`engine/risk.ts`)**
 - [ ] M3-11 Implement `waitRisk(stop, hour, expectedWaitMin, recentSafetyReports)` exactly as PRD §9.3.
