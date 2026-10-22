@@ -46,8 +46,6 @@ describe("Firestore Rules (PRD §7.2, M1-28 & M2-11)", () => {
   });
 
   it("enforces default deny for all other collections", () => {
-    expect(rulesContent).toMatch(
-      /match\s+\/\{document=\*\*\}\s*\{\s*allow read,\s*write:\s*if false;\s*\}/,
-    );
+    expect(rulesContent).toMatch(/match\s+\/\{document=\*\*\}\s*\{\s*allow read,\s*write:\s*if false;\s*\}/);
   });
 });
