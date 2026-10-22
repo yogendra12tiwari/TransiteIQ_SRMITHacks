@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import { Route, Stop } from "@transitiq/shared";
+import { Route, Stop, SafeSpot } from "@transitiq/shared";
 
 export interface NetworkState {
   routes: Route[];
   stops: Stop[];
+  safeSpots?: SafeSpot[];
   loading: boolean;
   error: Error | null;
 }
@@ -13,6 +14,7 @@ export interface NetworkState {
 export function useNetwork(): NetworkState {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [stops, setStops] = useState<Stop[]>([]);
+  const [safeSpots, setSafeSpots] = useState<SafeSpot[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -21,18 +23,21 @@ export function useNetwork(): NetworkState {
 
     async function loadNetwork() {
       try {
-        const [stopsSnap, routesSnap] = await Promise.all([
+        const [stopsSnap, routesSnap, safeSpotsSnap] = await Promise.all([
           getDocs(collection(db, "stops")),
           getDocs(collection(db, "routes")),
+          getDocs(collection(db, "safeSpots")),
         ]);
 
         if (!isMounted) return;
 
         const loadedStops = stopsSnap.docs.map((d) => Stop.parse(d.data()));
         const loadedRoutes = routesSnap.docs.map((d) => Route.parse(d.data()));
+        const loadedSpots = safeSpotsSnap.docs.map((d) => SafeSpot.parse(d.data()));
 
         setStops(loadedStops);
         setRoutes(loadedRoutes);
+        setSafeSpots(loadedSpots);
         setError(null);
       } catch (err: unknown) {
         if (!isMounted) return;
@@ -50,5 +55,5 @@ export function useNetwork(): NetworkState {
     };
   }, []);
 
-  return { routes, stops, loading, error };
+  return { routes, stops, safeSpots, loading, error };
 }

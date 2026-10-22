@@ -1,10 +1,12 @@
-import { BrowserRouter, Routes, Route, Link, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { SimulatedDataBadge } from "./components/SimulatedDataBadge";
 import { RequireOperator } from "./components/RequireOperator";
 import { HomePage } from "./pages/Home";
 import { DemoPage } from "./pages/Demo";
 import { AlertsPage } from "./pages/Alerts";
 import { PlanPage } from "./pages/Plan";
+import { RouteDetailPage } from "./pages/RouteDetail";
+import { TripSharePage } from "./pages/TripShare";
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -44,31 +46,11 @@ function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function RouteDetailPage() {
-  const { id } = useParams();
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Route Detail: {id}</h1>
-      <p className="text-slate-300">View live buses, stops, wait-risk, and safe spots.</p>
-    </div>
-  );
-}
-
 function ReportPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Anonymous Safety Feedback</h1>
       <p className="text-slate-300">Submit anonymous reports without personal tracking.</p>
-    </div>
-  );
-}
-
-function TripSharePage() {
-  const { token } = useParams();
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Live Shared Trip</h1>
-      <p className="text-slate-300">Viewing shared trip token: {token}</p>
     </div>
   );
 }
