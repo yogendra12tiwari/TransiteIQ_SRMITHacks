@@ -685,15 +685,15 @@ UI work is paired with the main build milestones. Task IDs: `U<n>-<nn>`. Each ta
 
 ### U1 — Home with live map (pairs with M2)
 
-- [ ] U1-01 Build `HomePage` with `MapView` behind a bottom `Sheet` containing the "Where are you going?" field.
-- [ ] U1-02 Show only: map, search card, language toggle, simulated badge, three bottom tabs.
-- [ ] U1-03 Bus markers (32 px) and stop markers (20 px) per §2.3; selected route emphasised, others dimmed.
-- [ ] U1-04 Tap bus/stop → small `StopSheet`/`BusSheet` with next arrivals as plain text.
-- [ ] U1-05 "List view" text link that shows buses and stops as text (map accessibility alternative).
-- [ ] U1-06 Stale-feed banner after 8 s of no updates; offline banner.
-- [ ] U1-07 Skeleton state while the first `sim/live` snapshot loads.
-- [ ] U1-08 Tests: search card opens Plan step 1; bus tap shows sheet; stale banner appears; no horizontal scroll at 360 px.
-- [ ] U1-09 Commit, push, deploy hosting.
+- [x] U1-01 Build `HomePage` with `MapView` behind a bottom `Sheet` containing the "Where are you going?" field.
+- [x] U1-02 Show only: map, search card, language toggle, simulated badge, three bottom tabs.
+- [x] U1-03 Bus markers (32 px) and stop markers (20 px) per §2.3; selected route emphasised, others dimmed.
+- [x] U1-04 Tap bus/stop → small `StopSheet`/`BusSheet` with next arrivals as plain text.
+- [x] U1-05 "List view" text link that shows buses and stops as text (map accessibility alternative).
+- [x] U1-06 Stale-feed banner after 8 s of no updates; offline banner.
+- [x] U1-07 Skeleton state while the first `sim/live` snapshot loads.
+- [x] U1-08 Tests: search card opens Plan step 1; bus tap shows sheet; stale banner appears; no horizontal scroll at 360 px.
+- [x] U1-09 Commit, push, deploy hosting.
 
 **Done when:** on a 360 px screen the user sees buses moving and one obvious field; nothing else competes for attention.
 
