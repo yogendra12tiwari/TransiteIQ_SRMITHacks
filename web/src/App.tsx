@@ -9,6 +9,7 @@ import { RouteDetailPage } from "./pages/RouteDetail";
 import { TripSharePage } from "./pages/TripShare";
 import { ReportPage } from "./pages/Report";
 import { DashboardPage } from "./pages/Dashboard";
+import { UiKitPage } from "./pages/UiKit";
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -57,6 +58,7 @@ export function AppRoutes() {
       <Route path="/alerts" element={<AlertsPage />} />
       <Route path="/report" element={<ReportPage />} />
       <Route path="/trip/:token" element={<TripSharePage />} />
+      <Route path="/ui-kit" element={<UiKitPage />} />
       <Route
         path="/dashboard"
         element={
