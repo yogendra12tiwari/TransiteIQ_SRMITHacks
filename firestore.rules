@@ -68,9 +68,38 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Community reports, aggregates, operator review queue, and audit logs (PRD §7.2, M6-07)
+    match /reports/{reportId} {
+      allow read: if isOperator();
+      allow write: if false;
+    }
+
+    match /clusters/{clusterId} {
+      allow read: if isOperator();
+      allow write: if false;
+    }
+
+    match /aggregates/{docPath=**} {
+      allow read: if isOperator();
+      allow write: if false;
+    }
+
+    match /reviewQueue/{queueId} {
+      allow read: if isOperator();
+      allow create: if false;
+      allow update: if isOperator();
+      allow delete: if false;
+    }
+
+    match /logs/{logId} {
+      allow read: if isOperator();
+      allow write: if false;
+    }
+
     // Default deny for all other collections until subsequent milestone rules are deployed
     match /{document=**} {
       allow read, write: if false;
     }
   }
 }
+

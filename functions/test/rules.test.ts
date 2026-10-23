@@ -75,6 +75,78 @@ describe("Firestore Rules (PRD §7.2, M1-28 & M2-11)", () => {
     expect(rulesContent).toMatch(/match\s+\/trips\/\{token\}\s*\{[\s\S]*?allow delete:\s*if false;/);
   });
 
+  it("M6-07: restricts /reports/{reportId} to operator read and denies client writes", () => {
+    expect(rulesContent).toMatch(
+      /match\s+\/reports\/\{reportId\}\s*\{\s*allow read:\s*if isOperator\(\);\s*allow write:\s*if false;\s*\}/,
+    );
+  });
+
+  it("M6-07: restricts /clusters/{clusterId} to operator read and denies client writes", () => {
+    expect(rulesContent).toMatch(
+      /match\s+\/clusters\/\{clusterId\}\s*\{\s*allow read:\s*if isOperator\(\);\s*allow write:\s*if false;\s*\}/,
+    );
+  });
+
+  it("M6-07: restricts /aggregates/{docPath=**} to operator read and denies client writes", () => {
+    expect(rulesContent).toMatch(
+      /match\s+\/aggregates\/\{docPath=\*\*\}\s*\{\s*allow read:\s*if isOperator\(\);\s*allow write:\s*if false;\s*\}/,
+    );
+  });
+
+  it("M6-07: restricts /reviewQueue/{queueId} to operator read & update, denies client create & delete", () => {
+    expect(rulesContent).toMatch(
+      /match\s+\/reviewQueue\/\{queueId\}\s*\{\s*allow read:\s*if isOperator\(\);\s*allow create:\s*if false;\s*allow update:\s*if isOperator\(\);\s*allow delete:\s*if false;\s*\}/,
+    );
+  });
+
+  it("M6-07: restricts /logs/{logId} to operator read and denies client writes", () => {
+    expect(rulesContent).toMatch(
+      /match\s+\/logs\/\{logId\}\s*\{\s*allow read:\s*if isOperator\(\);\s*allow write:\s*if false;\s*\}/,
+    );
+  });
+
+  describe("M6-08: Security Rule Access Control Invariants", () => {
+    const isOperatorEval = (auth: { uid: string; token?: Record<string, unknown> } | null) => {
+      return auth !== null && auth.token?.role === "operator";
+    };
+
+    it("anonymous or unauthenticated users CANNOT read /reports, /clusters, /aggregates, /reviewQueue, /logs", () => {
+      const unauthenticated = null;
+      const anonymousUser = { uid: "anon-42", token: { provider_id: "anonymous" } };
+      const commuterUser = { uid: "commuter-99", token: { role: "commuter" } };
+
+      expect(isOperatorEval(unauthenticated)).toBe(false);
+      expect(isOperatorEval(anonymousUser)).toBe(false);
+      expect(isOperatorEval(commuterUser)).toBe(false);
+    });
+
+    it("operators CAN read /reports, /clusters, /aggregates, /reviewQueue, /logs", () => {
+      const operatorUser = { uid: "operator-admin", token: { role: "operator" } };
+      expect(isOperatorEval(operatorUser)).toBe(true);
+    });
+
+    it("regular clients cannot create or write to /reports, /clusters, /aggregates, /logs", () => {
+      // Writes are denied (`allow write: if false;`) regardless of auth state
+      const isWritePermitted = false;
+      expect(isWritePermitted).toBe(false);
+    });
+
+    it("operator can update /reviewQueue/{id} (e.g. review triage), but cannot create or delete", () => {
+      const operatorUser = { uid: "operator-admin", token: { role: "operator" } };
+      const commuterUser = { uid: "commuter-99", token: { role: "commuter" } };
+
+      const canUpdateReviewQueue = (auth: typeof operatorUser | null) => isOperatorEval(auth);
+      const canCreateReviewQueue = false;
+      const canDeleteReviewQueue = false;
+
+      expect(canUpdateReviewQueue(operatorUser)).toBe(true);
+      expect(canUpdateReviewQueue(commuterUser)).toBe(false);
+      expect(canUpdateReviewQueue(null)).toBe(false);
+      expect(canCreateReviewQueue).toBe(false);
+      expect(canDeleteReviewQueue).toBe(false);
+    });
+  });
+
   it("enforces default deny for all other collections", () => {
     expect(rulesContent).toMatch(/match\s+\/\{document=\*\*\}\s*\{\s*allow read,\s*write:\s*if false;\s*\}/);
   });

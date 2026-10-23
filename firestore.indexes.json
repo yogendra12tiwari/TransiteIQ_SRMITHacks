@@ -23,6 +23,14 @@
         { "fieldPath": "stopId", "order": "ASCENDING" },
         { "fieldPath": "count", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "reviewQueue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
