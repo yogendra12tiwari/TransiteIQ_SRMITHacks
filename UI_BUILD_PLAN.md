@@ -701,18 +701,18 @@ UI work is paired with the main build milestones. Task IDs: `U<n>-<nn>`. Each ta
 
 ### U2 — Alerts, stop sheet, plan flow, compare card (pairs with M3–M4)
 
-- [ ] U2-01 Build `EtaText` (range, "Arriving now", "may not stop here") in both languages.
-- [ ] U2-02 Build `AlertCard` and the Alerts tab with empty/error states.
-- [ ] U2-03 Build the single skip-alert banner on Home for followed stops.
-- [ ] U2-04 Build Plan step 1 and step 2 using `Step`, `SearchField`, `OptionRow`; keep choices when going back.
-- [ ] U2-05 Build `RouteOptionCard` and `TakeawayLine`; pre-select the recommended option.
-- [ ] U2-06 Build "More details" `Disclosure` with `WhyList`, walking minutes, and the "Faster ↔ Less waiting alone" slider.
-- [ ] U2-07 "Show on map" link that lifts the map with both routes drawn (colour + line style: solid vs dashed so it is not colour-only).
-- [ ] U2-08 Handle the "Fastest is also the safest" case and the "no direct route" empty state.
-- [ ] U2-09 Sticky **Continue** button; disabled until an option is selected.
-- [ ] U2-10 Tests: takeaway text matches golden numbers (4 and 10); slider re-ranks; card selection by keyboard; back keeps state; Hindi text fits without truncation.
-- [ ] U2-11 Visual check at 360, 390, 430, 768 px.
-- [ ] U2-12 Commit, push, deploy hosting.
+- [x] U2-01 Build `EtaText` (range, "Arriving now", "may not stop here") in both languages.
+- [x] U2-02 Build `AlertCard` and the Alerts tab with empty/error states.
+- [x] U2-03 Build the single skip-alert banner on Home for followed stops.
+- [x] U2-04 Build Plan step 1 and step 2 using `Step`, `SearchField`, `OptionRow`; keep choices when going back.
+- [x] U2-05 Build `RouteOptionCard` and `TakeawayLine`; pre-select the recommended option.
+- [x] U2-06 Build "More details" `Disclosure` with `WhyList`, walking minutes, and the "Faster ↔ Less waiting alone" slider.
+- [x] U2-07 "Show on map" link that lifts the map with both routes drawn (colour + line style: solid vs dashed so it is not colour-only).
+- [x] U2-08 Handle the "Fastest is also the safest" case and the "no direct route" empty state.
+- [x] U2-09 Sticky **Continue** button; disabled until an option is selected.
+- [x] U2-10 Tests: takeaway text matches golden numbers (4 and 10); slider re-ranks; card selection by keyboard; back keeps state; Hindi text fits without truncation.
+- [x] U2-11 Visual check at 360, 390, 430, 768 px.
+- [x] U2-12 Commit, push, deploy hosting.
 
 **Done when:** the compare screen shows "32 min · wait 4 min · Low waiting risk" vs "28 min · wait 14 min · High waiting risk" with the takeaway, one primary button, and nothing else competing.
 
