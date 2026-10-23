@@ -20,7 +20,12 @@ export function AppShell({ children, showBottomTabs = true, className = "" }: Ap
         >
           {/* Top persistent header bar */}
           <header className="px-4 py-3 border-b border-[#D8DEE6] bg-white flex items-center justify-between z-30 shrink-0">
-            <SimulatedDataBadge />
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-sm text-[#111827] tracking-tight">
+                Transit<span className="text-[#0F5BD8]">IQ</span>
+              </span>
+              <SimulatedDataBadge />
+            </div>
             <LanguageToggle />
           </header>
 

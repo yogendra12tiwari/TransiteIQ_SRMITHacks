@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { Bus, Bell, AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export interface TabItem {
   to: string;
@@ -20,6 +21,15 @@ export function BottomTabs({
   tabs?: TabItem[];
   className?: string;
 }) {
+  const { t } = useTranslation();
+
+  const getLabel = (tab: TabItem) => {
+    if (tab.to === "/") return t("nav.home", tab.label);
+    if (tab.to === "/alerts") return t("nav.alerts", tab.label);
+    if (tab.to === "/report") return t("nav.report", tab.label);
+    return tab.label;
+  };
+
   return (
     <nav
       aria-label="Main Navigation"
@@ -28,6 +38,7 @@ export function BottomTabs({
       <div className="max-w-md mx-auto grid grid-cols-3 gap-1 px-2 pt-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
+          const displayLabel = getLabel(tab);
           return (
             <NavLink
               key={tab.to}
@@ -47,7 +58,7 @@ export function BottomTabs({
                     className={`w-5 h-5 ${isActive ? "text-[#0F5BD8]" : "text-[#4B5563]"}`}
                     aria-hidden="true"
                   />
-                  <span className="text-xs leading-none">{tab.label}</span>
+                  <span className="text-xs leading-none">{displayLabel}</span>
                 </>
               )}
             </NavLink>

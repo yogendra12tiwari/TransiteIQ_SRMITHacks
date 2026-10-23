@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Stop, EtaResult } from "@transitiq/shared";
-import { waitRisk, formatEtaRange } from "@transitiq/shared";
+import { waitRisk } from "@transitiq/shared";
 import { RiskBadge } from "./RiskBadge";
 
 export interface StopSheetProps {
@@ -93,10 +93,10 @@ export function StopSheet({
         </button>
       </div>
 
-      {/* Next Buses with ETA ranges */}
+      {/* Next Buses with plain arrival intervals */}
       <div className="mt-3">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-          {lang === "hi" ? "आने वाली बसें (लाइव ईटीए)" : "Upcoming Buses (Live ETA)"}
+          {lang === "hi" ? "आने वाली बसें" : "Upcoming buses"}
         </h3>
         {etas.length === 0 ? (
           <div className="p-3 rounded-lg bg-slate-800/60 text-slate-400 text-xs italic text-center">
@@ -106,28 +106,43 @@ export function StopSheet({
           </div>
         ) : (
           <div className="space-y-2">
-            {etas.map((etaItem) => (
-              <div
-                key={etaItem.busId}
-                className="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center font-bold text-xs text-indigo-300">
-                    BUS
+            {etas.map((etaItem) => {
+              const isNow = etaItem.lowMin <= 1;
+
+              return (
+                <div
+                  key={etaItem.busId}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center font-bold text-xs text-indigo-300">
+                      BUS
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-white">{etaItem.busId}</div>
+                      <div className="text-[10px] text-slate-400">
+                        {lang === "hi" ? "अपेक्षित आगमन" : "Estimated arrival"}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xs font-semibold text-white">{etaItem.busId}</div>
-                    <div className="text-[10px] text-slate-400">80% confidence window</div>
+                  <div className="text-right">
+                    <div className="text-sm font-bold text-emerald-400">
+                      {isNow ? (
+                        <span>{lang === "hi" ? "अभी पहुँच रही है" : "Arriving now"}</span>
+                      ) : (
+                        <span>
+                          {lang === "hi" ? "" : "Arriving in "}
+                          <span>
+                            {etaItem.lowMin}–{etaItem.highMin} min
+                          </span>
+                          {lang === "hi" ? " में पहुँचेगी" : ""}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm font-bold text-emerald-400 font-mono">
-                    {formatEtaRange(etaItem.lowMin, etaItem.highMin)}
-                  </div>
-                  <div className="text-[10px] text-slate-400">mean: {etaItem.meanMin}m</div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

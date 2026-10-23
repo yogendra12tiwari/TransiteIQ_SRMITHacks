@@ -1,6 +1,24 @@
 {
   "home": {
-    "search": "Where are you going?"
+    "search": "Where are you going?",
+    "recent": "Recent: Lucknow University",
+    "popular": "Popular places",
+    "listView": "List view",
+    "mapView": "Map view",
+    "stale": "Data is taking longer to update. Showing latest bus positions.",
+    "busesMoving": "{{count}} buses running",
+    "feedPaused": "Feed paused",
+    "upcomingBuses": "Upcoming buses",
+    "stopsAndBuses": "Stops and buses",
+    "quietStop": "Quiet stop",
+    "dwelling": "Waiting at stop",
+    "moving": "Moving",
+    "nextStop": "Next stop"
+  },
+  "nav": {
+    "home": "Home",
+    "alerts": "Alerts",
+    "report": "Report"
   },
   "plan": {
     "from": {

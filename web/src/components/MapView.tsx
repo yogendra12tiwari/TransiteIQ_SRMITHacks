@@ -4,6 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Route, Stop, Bus, Alert, EtaResult } from "@transitiq/shared";
 import { StopSheet } from "./StopSheet";
+import { BusSheet } from "./BusSheet";
 
 export interface OverlayRoute {
   id: string;
@@ -22,6 +23,7 @@ export interface MapViewProps {
   alerts?: Alert[];
   isStale?: boolean;
   followedStopId?: string;
+  selectedRouteId?: string;
   overlayRoutes?: OverlayRoute[];
   originCoord?: [number, number];
   destinationCoord?: [number, number];
@@ -32,19 +34,25 @@ export interface MapViewProps {
 // Lucknow City Center Coordinates (Hazratganj)
 const LUCKNOW_CENTER: [number, number] = [26.8467, 80.9462];
 
-function createBusIcon(color: string, isDwelling: boolean) {
+function createBusIcon(routeNumber: string, color: string, isDwelling: boolean, isSelected: boolean = false) {
   return L.divIcon({
     className: "transitiq-bus-icon",
     html: `
-      <div style="background-color: ${color};" class="relative w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-xl border-2 ${
-        isDwelling ? "border-amber-400 ring-2 ring-amber-400/50" : "border-white"
-      } cursor-pointer hover:scale-110 transition-transform">
-        <span>🚌</span>
-        ${
-          isDwelling
-            ? '<span class="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full border border-slate-900 animate-ping"></span>'
-            : ""
-        }
+      <div class="relative w-12 h-12 -m-2 flex items-center justify-center cursor-pointer select-none" role="button" aria-label="Bus ${routeNumber}">
+        <div style="background-color: ${color};" class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black shadow-lg border-2 ${
+          isSelected
+            ? "border-amber-400 ring-4 ring-amber-400/50 scale-110"
+            : isDwelling
+              ? "border-amber-300 ring-2 ring-amber-300/40"
+              : "border-white"
+        } transition-transform">
+          <span>${routeNumber}</span>
+          ${
+            isDwelling
+              ? '<span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-amber-400 rounded-full border border-slate-900 animate-ping"></span>'
+              : ""
+          }
+        </div>
       </div>
     `,
     iconSize: [32, 32],
@@ -72,6 +80,7 @@ export function MapView({
   alerts = [],
   isStale = false,
   followedStopId,
+  selectedRouteId,
   overlayRoutes = [],
   originCoord,
   destinationCoord,
@@ -182,11 +191,6 @@ export function MapView({
   };
 
   const selectedBusRoute = selectedBus ? routes.find((r) => r.id === selectedBus.routeId) : null;
-  const selectedBusNextStops = selectedBusRoute
-    ? selectedBusRoute.stopIds
-        .map((id) => stops.find((s) => s.id === id))
-        .filter((s): s is Stop => Boolean(s))
-    : [];
 
   return (
     <div data-testid="map-view-container" className="relative w-full h-full flex flex-col min-h-[500px]">
@@ -254,17 +258,21 @@ export function MapView({
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          {/* Route Polylines */}
+          {/* Route Polylines: Selected route 7px / 1.0 opacity, other routes dimmed to 40% (U1-03) */}
           {routes.map((route) => {
             if (visibleRouteIds[route.id] === false) return null;
+            const activeRouteId = selectedRouteId || selectedBus?.routeId;
+            const isAnyEmphasized = Boolean(activeRouteId);
+            const isSelected = activeRouteId === route.id;
+
             return (
               <Polyline
                 key={route.id}
                 positions={route.polyline as [number, number][]}
                 pathOptions={{
                   color: route.color,
-                  weight: 5,
-                  opacity: 0.85,
+                  weight: isSelected ? 7 : 5,
+                  opacity: isAnyEmphasized ? (isSelected ? 1.0 : 0.4) : 0.85,
                 }}
               />
             );
@@ -319,15 +327,16 @@ export function MapView({
             </CircleMarker>
           )}
 
-          {/* Stops Circle Markers */}
+          {/* Stops Circle Markers: 20px (radius 10); risky stop gets ring + "Quiet stop" text (U1-03) */}
           {stops.map((stop) => {
-            const isStopA = stop.id === "stop_A";
-            const isStopB = stop.id === "stop_B";
+            const isQuiet = stop.id === "stop_A" || stop.activity <= 0.3 || stop.lighting === "poor";
+            const isSelectedStop = selectedStop?.id === stop.id;
+
             return (
               <CircleMarker
                 key={stop.id}
                 center={[stop.lat, stop.lng]}
-                radius={isStopA ? 9 : isStopB ? 8 : 6}
+                radius={10}
                 eventHandlers={{
                   click: () => {
                     setSelectedStop(stop);
@@ -335,28 +344,30 @@ export function MapView({
                   },
                 }}
                 pathOptions={{
-                  color: isStopA ? "#ef4444" : isStopB ? "#10b981" : "#475569",
-                  fillColor: isStopA ? "#f87171" : isStopB ? "#34d399" : "#0f172a",
+                  color: isQuiet ? "#ef4444" : "#10b981",
+                  fillColor: isQuiet ? "#f87171" : "#34d399",
                   fillOpacity: 0.95,
-                  weight: 2.5,
+                  weight: isSelectedStop ? 4 : 2,
                 }}
               >
                 <Popup className="transitiq-popup">
                   <div className="text-slate-900 p-1 text-xs space-y-1">
-                    <p className="font-bold text-sm">{stop.name}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-bold text-sm">{stop.name}</p>
+                      {isQuiet && (
+                        <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 text-[10px] font-semibold border border-rose-300">
+                          Quiet stop
+                        </span>
+                      )}
+                    </div>
                     <p className="text-[11px] text-slate-600">
                       Lighting: <span className="capitalize">{stop.lighting}</span> | Activity:{" "}
                       {stop.activity}
                     </p>
-                    {isStopA && (
-                      <p className="text-rose-700 font-semibold text-[11px]">
-                        ⚠️ Target Isolated Stop (Avg Evening Wait: 18 min)
-                      </p>
-                    )}
-                    {isStopB && (
-                      <p className="text-emerald-700 font-semibold text-[11px]">
-                        ✓ Busy Alternative Hub (~350 m away, Wait: 4 min)
-                      </p>
+                    {isQuiet ? (
+                      <p className="text-rose-700 font-semibold text-[11px]">Quiet stop • Long wait</p>
+                    ) : (
+                      <p className="text-emerald-700 font-semibold text-[11px]">Busy and well lit stop</p>
                     )}
                   </div>
                 </Popup>
@@ -364,17 +375,22 @@ export function MapView({
             );
           })}
 
-          {/* Live Buses Markers */}
+          {/* Live Buses Markers: 32px with route number, 48px tap area (U1-03) */}
           {renderedBuses.map((bus) => {
             if (visibleRouteIds[bus.routeId] === false) return null;
             const color = routeColorMap.get(bus.routeId) || "#6366f1";
             const isDwelling = bus.speedMps === 0;
+            const isSelected = selectedBus?.id === bus.id;
+            const route = routes.find((r) => r.id === bus.routeId);
+            const routeNum = route
+              ? route.name.replace(/[^0-9]/g, "") || route.name
+              : bus.routeId.replace(/[^0-9]/g, "");
 
             return (
               <Marker
                 key={bus.id}
                 position={[bus.lat, bus.lng]}
-                icon={createBusIcon(color, isDwelling)}
+                icon={createBusIcon(routeNum, color, isDwelling, isSelected)}
                 eventHandlers={{
                   click: () => handleBusClick(bus),
                 }}
@@ -382,16 +398,12 @@ export function MapView({
                 <Popup className="transitiq-popup">
                   <div className="text-slate-900 p-1 text-xs space-y-1">
                     <p className="font-bold text-sm">
-                      {bus.id} ({bus.routeId})
-                    </p>
-                    <p>
-                      Speed: <span className="font-semibold">{(bus.speedMps * 3.6).toFixed(0)} km/h</span> (
-                      {bus.speedMps.toFixed(1)} m/s)
+                      {route?.name || bus.routeId} ({bus.id})
                     </p>
                     <p>
                       Status:{" "}
                       <span className={`font-semibold ${isDwelling ? "text-amber-600" : "text-emerald-600"}`}>
-                        {isDwelling ? "Dwelling at Stop" : bus.status}
+                        {isDwelling ? "Waiting at stop" : bus.status}
                       </span>
                     </p>
                   </div>
@@ -402,81 +414,18 @@ export function MapView({
         </MapContainer>
       </div>
 
-      {/* Bus Details Bottom Sheet (M2-27) */}
-      {selectedBus && (
-        <div
-          data-testid="bus-bottom-sheet"
-          className="absolute bottom-4 left-4 right-4 z-[1000] p-4 rounded-2xl bg-slate-900/95 backdrop-blur-md border border-slate-700/80 shadow-2xl space-y-3"
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center space-x-2">
-                <span
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: selectedBusRoute?.color || "#6366f1" }}
-                />
-                <h3 className="font-bold text-white text-base">
-                  {selectedBusRoute?.name || selectedBus.routeId}
-                </h3>
-                <span className="text-xs text-slate-400 font-mono">({selectedBus.id})</span>
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Status:{" "}
-                <span
-                  className={`font-semibold ${
-                    selectedBus.speedMps === 0 ? "text-amber-400" : "text-emerald-400"
-                  }`}
-                >
-                  {selectedBus.speedMps === 0 ? "Dwelling at passenger stop" : selectedBus.status}
-                </span>
-              </p>
-            </div>
-            <button
-              onClick={() => setSelectedBus(null)}
-              className="text-slate-400 hover:text-white p-1 rounded-lg text-sm"
-              aria-label="Close sheet"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="p-2 rounded-lg bg-slate-800/60 border border-slate-700/40">
-              <span className="text-slate-400">Current Speed:</span>
-              <p className="font-semibold text-white font-mono mt-0.5">
-                {(selectedBus.speedMps * 3.6).toFixed(0)} km/h ({selectedBus.speedMps.toFixed(1)} m/s)
-              </p>
-            </div>
-            <div className="p-2 rounded-lg bg-slate-800/60 border border-slate-700/40">
-              <span className="text-slate-400">Distance along route:</span>
-              <p className="font-semibold text-white font-mono mt-0.5">
-                {Math.round(selectedBus.distanceAlongRouteM)} m
-              </p>
-            </div>
-          </div>
-
-          {selectedBusNextStops.length > 0 && (
-            <div className="space-y-1">
-              <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
-                Route Stops
-              </span>
-              <div className="flex items-center space-x-1.5 overflow-x-auto py-1 text-xs">
-                {selectedBusNextStops.map((st, idx) => (
-                  <span
-                    key={st.id}
-                    className="px-2 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700/60 whitespace-nowrap text-[11px]"
-                  >
-                    {idx + 1}. {st.name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+      {/* Bus Details Bottom Sheet (U1-04) - only rendered if parent does not handle */}
+      {selectedBus && !onBusSelect && (
+        <BusSheet
+          bus={selectedBus}
+          route={selectedBusRoute ?? undefined}
+          stops={stops}
+          onClose={() => setSelectedBus(null)}
+        />
       )}
 
-      {/* Stop Sheet (M3-29) */}
-      {selectedStop && (
+      {/* Stop Sheet (M3-29) - only rendered if parent does not handle */}
+      {selectedStop && !onStopSelect && (
         <StopSheet
           stop={selectedStop}
           onClose={() => setSelectedStop(null)}

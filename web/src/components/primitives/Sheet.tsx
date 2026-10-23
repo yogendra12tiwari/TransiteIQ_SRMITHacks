@@ -5,10 +5,17 @@ export interface SheetProps {
   snapPoints?: ("peek" | "half" | "full")[];
   initialSnap?: "peek" | "half" | "full";
   title?: string;
+  position?: "fixed" | "absolute";
   className?: string;
 }
 
-export function Sheet({ children, initialSnap = "half", title, className = "" }: SheetProps) {
+export function Sheet({
+  children,
+  initialSnap = "half",
+  title,
+  position = "fixed",
+  className = "",
+}: SheetProps) {
   const [snap, setSnap] = useState<"peek" | "half" | "full">(initialSnap);
 
   const heightStyles = {
@@ -25,10 +32,12 @@ export function Sheet({ children, initialSnap = "half", title, className = "" }:
     });
   };
 
+  const posClass = position === "absolute" ? "absolute" : "fixed";
+
   return (
     <section
       aria-label={title || "Details panel"}
-      className={`fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-[#D8DEE6] rounded-t-[16px] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] transition-all duration-300 flex flex-col ${heightStyles} ${className}`}
+      className={`${posClass} bottom-0 left-0 right-0 z-20 bg-white border-t border-[#D8DEE6] rounded-t-[16px] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] transition-all duration-300 flex flex-col ${heightStyles} ${className}`}
     >
       {/* Draggable grab handle */}
       <button
