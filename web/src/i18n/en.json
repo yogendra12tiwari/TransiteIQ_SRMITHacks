@@ -33,7 +33,19 @@
     "total": "{{n}} min total",
     "wait": "Wait {{n}} min",
     "takeaway": "{{extra}} minutes longer, but {{saved}} minutes less waiting at a quiet stop.",
-    "moreDetails": "More details"
+    "moreDetails": "More details",
+    "fromContext": "From: {{from}}",
+    "change": "Change",
+    "useLocation": "Use my location",
+    "continueWithRoute": "Continue with this route",
+    "fastestAndSafest": "Fastest and safest",
+    "showOnMap": "Show on map",
+    "noRouteTitle": "No direct route found",
+    "noRouteDesc": "Try choosing another origin or destination.",
+    "chooseTravel": "Choose how to travel",
+    "walkMin": "Walk to the stop: {{n}} min",
+    "fasterLabel": "Faster",
+    "safeLabel": "Less waiting alone"
   },
   "common": {
     "continue": "Continue",

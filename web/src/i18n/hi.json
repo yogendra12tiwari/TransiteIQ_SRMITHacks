@@ -33,7 +33,19 @@
     "total": "कुल {{n}} मिनट",
     "wait": "{{n}} मिनट इंतज़ार",
     "takeaway": "{{extra}} मिनट ज़्यादा, लेकिन सुनसान स्टॉप पर {{saved}} मिनट कम इंतज़ार।",
-    "moreDetails": "और जानकारी"
+    "moreDetails": "और जानकारी",
+    "fromContext": "प्रस्थान: {{from}}",
+    "change": "बदलें",
+    "useLocation": "मेरी वर्तमान जगह का उपयोग करें",
+    "continueWithRoute": "इस मार्ग से आगे बढ़ें",
+    "fastestAndSafest": "सबसे तेज़ और सबसे सुरक्षित",
+    "showOnMap": "मानचित्र पर देखें",
+    "noRouteTitle": "कोई सीधा मार्ग नहीं मिला",
+    "noRouteDesc": "कृपया कोई अन्य प्रस्थान या गंतव्य स्थान चुनें।",
+    "chooseTravel": "यात्रा का तरीका चुनें",
+    "walkMin": "स्टॉप तक पैदल: {{n}} मिनट",
+    "fasterLabel": "तेज़",
+    "safeLabel": "अकेले कम इंतज़ार"
   },
   "common": {
     "continue": "आगे बढ़ें",

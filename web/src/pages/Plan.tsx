@@ -1,44 +1,89 @@
 import { useState, useMemo, useEffect } from "react";
-import { LUCKNOW_PLACES, type RouteOption, planRoutes } from "@transitiq/shared";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { ArrowLeft, MapPin, Map, Navigation } from "lucide-react";
+import { LUCKNOW_PLACES, planRoutes, waitRisk } from "@transitiq/shared";
 import { useNetwork } from "../hooks/useNetwork";
 import { useLiveState } from "../hooks/useLiveState";
+import { SearchField } from "../components/primitives/SearchField";
+import { OptionRow } from "../components/primitives/OptionRow";
+import { Button } from "../components/primitives/Button";
+import { Disclosure } from "../components/primitives/Disclosure";
+import { StickyAction } from "../components/primitives/StickyAction";
+import { EmptyState } from "../components/primitives/EmptyState";
+import { Sheet } from "../components/primitives/Sheet";
+import { WhyList } from "../components/primitives/WhyList";
+import { TakeawayLine } from "../components/TakeawayLine";
+import { RouteOptionCard } from "../components/RouteOptionCard";
 import { SpeedSafetySlider } from "../components/SpeedSafetySlider";
-import { RouteCompareCard } from "../components/RouteCompareCard";
 import { MapView, type OverlayRoute } from "../components/MapView";
 
 export function PlanPage() {
-  const { routes, stops, loading: networkLoading } = useNetwork();
-  const { data, isStale } = useLiveState();
-  const buses = data?.buses ?? [];
-  const alerts = data?.alerts ?? [];
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language === "hi" ? "hi" : "en";
 
-  const [originPlaceId, setOriginPlaceId] = useState<string>("place_lohia_crossing");
-  const [destPlaceId, setDestPlaceId] = useState<string>("place_gomtinagar");
+  const { routes, stops } = useNetwork();
+  const { data: liveData } = useLiveState();
+  const buses = liveData?.buses ?? [];
+  const alerts = liveData?.alerts ?? [];
+
+  // Determine initial step and target destination from query param
+  const destinationQuery = searchParams.get("to") || "";
+  const initialDestPlace = destinationQuery
+    ? LUCKNOW_PLACES.find(
+        (p) =>
+          p.name.toLowerCase() === destinationQuery.toLowerCase() ||
+          p.id.toLowerCase() === destinationQuery.toLowerCase(),
+      )
+    : undefined;
+
+  const [step, setStep] = useState<1 | 2 | 3>(() => (initialDestPlace ? 1 : 1));
+  const [originId, setOriginId] = useState<string>("place_lohia_crossing");
+  const [destId, setDestId] = useState<string>(initialDestPlace ? initialDestPlace.id : "place_gomtinagar");
+  const [originSearch, setOriginSearch] = useState<string>("");
+  const [destSearch, setDestSearch] = useState<string>("");
   const [alpha, setAlpha] = useState<number>(0.5);
-  const [hour, setHour] = useState<number>(20); // 8 PM evening peak
   const [selectedRouteId, setSelectedRouteId] = useState<string | undefined>(undefined);
-  const [lang, setLang] = useState<"en" | "hi">("en");
-  const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [isMapSheetOpen, setIsMapSheetOpen] = useState<boolean>(false);
 
   const originPlace = useMemo(
-    () => LUCKNOW_PLACES.find((p) => p.id === originPlaceId) ?? LUCKNOW_PLACES[0]!,
-    [originPlaceId],
+    () => LUCKNOW_PLACES.find((p) => p.id === originId) ?? LUCKNOW_PLACES[0]!,
+    [originId],
   );
 
   const destPlace = useMemo(
-    () => LUCKNOW_PLACES.find((p) => p.id === destPlaceId) ?? LUCKNOW_PLACES[3]!,
-    [destPlaceId],
+    () => LUCKNOW_PLACES.find((p) => p.id === destId) ?? LUCKNOW_PLACES[3]!,
+    [destId],
   );
 
-  const stopNamesMap = useMemo(() => {
-    const map: Record<string, string> = {};
-    stops.forEach((s) => {
-      map[s.id] = s.name;
-    });
-    return map;
-  }, [stops]);
+  // Filtered popular places for Step 1
+  const filteredOrigins = useMemo(() => {
+    if (!originSearch.trim()) return LUCKNOW_PLACES.slice(0, 6);
+    const q = originSearch.toLowerCase();
+    return LUCKNOW_PLACES.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.nameHi && p.nameHi.includes(q)) ||
+        p.category.toLowerCase().includes(q),
+    );
+  }, [originSearch]);
 
-  // Handle route planning
+  // Filtered popular places for Step 2 (excluding origin)
+  const filteredDestinations = useMemo(() => {
+    const list = LUCKNOW_PLACES.filter((p) => p.id !== originId);
+    if (!destSearch.trim()) return list.slice(0, 6);
+    const q = destSearch.toLowerCase();
+    return list.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.nameHi && p.nameHi.includes(q)) ||
+        p.category.toLowerCase().includes(q),
+    );
+  }, [originId, destSearch]);
+
+  // Compute Route Options for Step 3
   const options = useMemo(() => {
     if (routes.length === 0 || stops.length === 0) return [];
     if (originPlace.id === destPlace.id) return [];
@@ -47,328 +92,456 @@ export function PlanPage() {
       origin: { lat: originPlace.lat, lng: originPlace.lng },
       destination: { lat: destPlace.lat, lng: destPlace.lng },
       network: { routes, stops },
-      hour,
+      hour: 20, // 8 PM evening peak
       alpha,
     });
-  }, [originPlace, destPlace, routes, stops, hour, alpha]);
+  }, [originPlace, destPlace, routes, stops, alpha]);
 
   const fastest = useMemo(() => options.find((o) => o.label === "Fastest"), [options]);
   const safer = useMemo(() => options.find((o) => o.label === "Safer"), [options]);
 
-  // Keep selected route valid
+  // Pre-select Recommended option (or first)
   useEffect(() => {
-    if (options.length > 0 && (!selectedRouteId || !options.some((o) => o.id === selectedRouteId))) {
-      setSelectedRouteId(safer ? safer.id : options[0]!.id);
+    if (options.length > 0) {
+      const rec = safer ? safer.id : options[0]!.id;
+      if (!selectedRouteId || !options.some((o) => o.id === selectedRouteId)) {
+        setSelectedRouteId(rec);
+      }
     }
-  }, [options, selectedRouteId, safer]);
+  }, [options, safer, selectedRouteId]);
 
-  const handleSelectRoute = (option: RouteOption) => {
-    setSelectedRouteId(option.id);
-    try {
-      localStorage.setItem("transitiq_selected_route", JSON.stringify(option));
-    } catch (e) {
-      console.warn("Could not save selected route to localStorage:", e);
-    }
-    setSuccessToast(
-      lang === "hi"
-        ? `${option.label} मार्ग चुना गया (${option.travelMin} मिनट)। सेफ वेट के लिए तैयार!`
-        : `Selected ${option.label} route (${option.travelMin} min). Ready for Safe Wait!`,
-    );
-    setTimeout(() => setSuccessToast(null), 4000);
-  };
+  const selectedOption = useMemo(
+    () => options.find((o) => o.id === selectedRouteId) || safer || options[0],
+    [options, selectedRouteId, safer],
+  );
 
-  const handleSwap = () => {
-    const currentOrigin = originPlaceId;
-    setOriginPlaceId(destPlaceId);
-    setDestPlaceId(currentOrigin);
-  };
-
-  const handlePreset = (originId: string, destId: string) => {
-    setOriginPlaceId(originId);
-    setDestPlaceId(destId);
-  };
-
-  // Map Overlay Polylines for Fastest vs Safer comparison (M4-20)
+  // Map Overlay Polylines: Fastest (solid line), Safer (dashed line) -> Dual coding (U2-07)
   const overlayRoutes: OverlayRoute[] = useMemo(() => {
     const list: OverlayRoute[] = [];
     if (fastest) {
       list.push({
         id: "overlay_fastest",
-        color: "#e11d48", // Crimson red for Fastest (via Stop A)
+        color: "#E11D48", // Crimson for Fastest
         polyline: fastest.polyline,
         name: `Fastest (${fastest.travelMin}m)`,
-        weight: selectedRouteId === fastest.id ? 7 : 4,
+        weight: 6,
+        dashArray: undefined, // Solid line
       });
     }
     if (safer && safer.id !== fastest?.id) {
       list.push({
         id: "overlay_safer",
-        color: "#10b981", // Emerald green for Safer (via Stop B)
+        color: "#059669", // Emerald for Safer
         polyline: safer.polyline,
         name: `Safer (${safer.travelMin}m)`,
-        weight: selectedRouteId === safer.id ? 7 : 4,
+        weight: 6,
+        dashArray: "8, 8", // Dashed line
       });
     }
     return list;
-  }, [fastest, safer, selectedRouteId]);
+  }, [fastest, safer]);
 
-  if (networkLoading) {
-    return (
-      <div className="flex items-center justify-center p-12 text-slate-400">
-        <div className="animate-spin h-6 w-6 border-2 border-indigo-500 border-t-transparent rounded-full mr-3" />
-        Loading Lucknow transit network...
-      </div>
-    );
-  }
+  // Stop Risk computation for selected option
+  const boardingStop = useMemo(
+    () => stops.find((s) => s.id === selectedOption?.boardingStopId),
+    [stops, selectedOption],
+  );
+
+  const stopRiskInfo = useMemo(() => {
+    if (!boardingStop) return null;
+    return waitRisk(boardingStop, 20, selectedOption?.waitMin ?? 10, 0, currentLang);
+  }, [boardingStop, selectedOption, currentLang]);
+
+  // Golden comparison numbers: 4 min longer, 10 min less waiting
+  const extraMin = safer && fastest ? Math.max(0, safer.travelMin - fastest.travelMin) : 0;
+  const savedMin = safer && fastest ? Math.max(0, fastest.waitMin - safer.waitMin) : 0;
+  const isFastestAlsoSafer = fastest && safer && fastest.id === safer.id;
+
+  const handleBack = () => {
+    if (step === 3) setStep(2);
+    else if (step === 2) setStep(1);
+    else navigate("/");
+  };
+
+  const handleUseLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        () => {
+          // In simulated Lucknow dataset, pick closest hub (e.g. Lohia Path Crossing)
+          setOriginId("place_lohia_crossing");
+        },
+        () => {
+          // Graceful fallback
+        },
+      );
+    }
+  };
+
+  const handleContinueWithRoute = () => {
+    if (!selectedOption) return;
+    try {
+      localStorage.setItem("transitiq_selected_route", JSON.stringify(selectedOption));
+    } catch {
+      // Ignore storage errors
+    }
+    navigate(`/route/${selectedOption.id}`);
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Toast Notification */}
-      {successToast && (
-        <div className="p-3.5 rounded-xl bg-emerald-950/90 border border-emerald-500/60 text-emerald-200 text-xs font-semibold flex items-center justify-between shadow-lg">
-          <span>✓ {successToast}</span>
-          <button onClick={() => setSuccessToast(null)} className="text-emerald-400 hover:text-white">
-            ✕
-          </button>
-        </div>
-      )}
+    <div data-testid="plan-page" className="p-4 space-y-4 max-w-lg mx-auto text-[#111827] pb-28 relative">
+      {/* Top Navigation & Step Indicator */}
+      <div className="flex items-center justify-between pb-2 border-b border-[#D8DEE6]">
+        <button
+          type="button"
+          onClick={handleBack}
+          aria-label={t("common.back", "Back")}
+          className="min-h-[48px] min-w-[48px] -ml-2 p-2 flex items-center justify-center text-[#4B5563] hover:text-[#111827] rounded-xl transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#111827]"
+        >
+          <ArrowLeft className="w-5 h-5" aria-hidden="true" />
+        </button>
 
-      {/* Header with Title and Language Toggle */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-lg">
-        <div>
-          <div className="flex items-center space-x-2">
-            <span className="text-xl">🗺️</span>
-            <h1 className="text-xl font-bold text-white">
-              {lang === "hi" ? "स्मार्ट रूट प्लानर" : "Safety-Aware Route Planner"}
-            </h1>
-          </div>
-          <p className="text-xs text-slate-400 mt-0.5">
-            {lang === "hi"
-              ? "गति बनाम असुरक्षित इंतज़ार (एक्सपोज़र मिनट) की पारदर्शी तुलना"
-              : "Compare Fastest vs. Safer options with transparent exposure minutes"}
-          </p>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setLang(lang === "en" ? "hi" : "en")}
-            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold border border-slate-600 transition"
-          >
-            {lang === "en" ? "हिंदी (Hindi)" : "English"}
-          </button>
-        </div>
+        <span className="text-sm font-semibold text-[#4B5563]" data-testid="step-indicator">
+          {t("plan.step", { n: step, total: 3 })}
+        </span>
       </div>
 
-      {/* Trip Planning Form */}
-      <div className="p-6 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-lg space-y-5">
-        {/* Quick Presets */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-slate-400">{lang === "hi" ? "त्वरित चयन:" : "Presets:"}</span>
-          <button
-            data-testid="preset-demo-btn"
-            onClick={() => handlePreset("place_lohia_crossing", "place_gomtinagar")}
-            className={`text-xs px-3 py-1 rounded-lg border transition font-semibold ${
-              originPlaceId === "place_lohia_crossing" && destPlaceId === "place_gomtinagar"
-                ? "bg-purple-600/30 border-purple-500/60 text-purple-300"
-                : "bg-slate-700/60 border-slate-600 text-slate-300 hover:bg-slate-700"
-            }`}
-          >
-            ⚡{" "}
-            {lang === "hi" ? "डेमो ट्रिप (लोहिया पथ → गोमती नगर)" : "Demo Pair: Lohia Crossing → Gomti Nagar"}
-          </button>
-
-          <button
-            onClick={() => handlePreset("place_lu", "place_gomtinagar")}
-            className={`text-xs px-3 py-1 rounded-lg border transition ${
-              originPlaceId === "place_lu" && destPlaceId === "place_gomtinagar"
-                ? "bg-indigo-600/30 border-indigo-500/60 text-indigo-300"
-                : "bg-slate-700/60 border-slate-600 text-slate-300 hover:bg-slate-700"
-            }`}
-          >
-            🎓 {lang === "hi" ? "विश्वविद्यालय → गोमती नगर" : "University → Gomti Nagar"}
-          </button>
-
-          <button
-            onClick={() => handlePreset("place_charbagh", "place_indiranagar")}
-            className={`text-xs px-3 py-1 rounded-lg border transition ${
-              originPlaceId === "place_charbagh" && destPlaceId === "place_indiranagar"
-                ? "bg-indigo-600/30 border-indigo-500/60 text-indigo-300"
-                : "bg-slate-700/60 border-slate-600 text-slate-300 hover:bg-slate-700"
-            }`}
-          >
-            🚆 {lang === "hi" ? "चारबाग → इंदिरा नगर" : "Charbagh → Indira Nagar"}
-          </button>
-        </div>
-
-        {/* Origin / Destination Pickers with Swap */}
-        <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] items-center gap-3">
-          {/* Origin */}
-          <div className="space-y-1">
-            <label
-              htmlFor="origin-select"
-              className="text-xs font-semibold text-slate-300 flex items-center gap-1.5"
-            >
-              <span>🟢</span>
-              <span>{lang === "hi" ? "प्रस्थान स्थान (Origin)" : "Origin Location"}</span>
-            </label>
-            <select
-              id="origin-select"
-              data-testid="origin-select"
-              value={originPlaceId}
-              onChange={(e) => setOriginPlaceId(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-            >
-              {LUCKNOW_PLACES.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {lang === "hi" && p.nameHi ? p.nameHi : p.name} ({p.category})
-                </option>
-              ))}
-            </select>
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* STEP 1: WHERE FROM? (R2)                                      */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {step === 1 && (
+        <section aria-labelledby="step-1-title" className="space-y-4">
+          <div>
+            <h1 id="step-1-title" className="text-xl font-bold text-[#111827]">
+              {t("plan.from.title", "Where are you starting?")}
+            </h1>
+            <p className="text-xs text-[#4B5563] mt-0.5">
+              {currentLang === "hi"
+                ? "अपना प्रस्थान स्थान चुनें या खोजें"
+                : "Choose or search your starting point in Lucknow"}
+            </p>
           </div>
 
-          {/* Swap Button */}
-          <div className="flex justify-center md:pt-5">
+          <SearchField
+            id="origin-search"
+            label={t("plan.from.title", "Where are you starting?")}
+            hideLabel
+            placeholder={currentLang === "hi" ? "स्थान खोजें..." : "Type a place..."}
+            value={originSearch}
+            onChange={(e) => setOriginSearch(e.target.value)}
+            data-testid="origin-search-input"
+          />
+
+          {/* "Use my location" text link */}
+          <div className="flex items-center justify-between pt-1">
             <button
-              onClick={handleSwap}
-              title="Swap Origin and Destination"
-              aria-label="Swap Origin and Destination"
-              className="p-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition border border-slate-600"
+              type="button"
+              onClick={handleUseLocation}
+              className="text-xs font-semibold text-[#0F5BD8] hover:underline flex items-center gap-1.5 min-h-[48px] cursor-pointer"
             >
-              ⇄
+              <Navigation className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{t("plan.useLocation", "Use my location")}</span>
             </button>
           </div>
 
-          {/* Destination */}
-          <div className="space-y-1">
-            <label
-              htmlFor="dest-select"
-              className="text-xs font-semibold text-slate-300 flex items-center gap-1.5"
-            >
-              <span>🔴</span>
-              <span>{lang === "hi" ? "गंतव्य स्थान (Destination)" : "Destination Location"}</span>
-            </label>
-            <select
-              id="dest-select"
-              data-testid="dest-select"
-              value={destPlaceId}
-              onChange={(e) => setDestPlaceId(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-            >
-              {LUCKNOW_PLACES.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {lang === "hi" && p.nameHi ? p.nameHi : p.name} ({p.category})
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Time of Day & Slider Controls */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          {/* Hour Selector */}
-          <div className="space-y-2 p-4 rounded-xl bg-slate-900/60 border border-slate-700/60">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-300">
-                {lang === "hi" ? "यात्रा का समय:" : "Travel Time-of-Day:"}
-              </span>
-              <span className="font-mono text-indigo-400 font-bold">
-                {hour}:00 IST ({hour >= 19 ? "🌙 Night" : "☀️ Evening Peak"})
-              </span>
-            </div>
-            <input
-              type="range"
-              min={17}
-              max={22}
-              step={1}
-              value={hour}
-              onChange={(e) => setHour(parseInt(e.target.value, 10))}
-              className="w-full accent-indigo-500 cursor-pointer"
-            />
-            <div className="flex justify-between text-[10px] text-slate-500">
-              <span>17:00 (Peak)</span>
-              <span className="text-amber-400">20:00 (Evening)</span>
-              <span>22:00 (Late Night)</span>
-            </div>
+          {/* Popular places list */}
+          <div role="radiogroup" aria-label="Starting places" className="space-y-2">
+            {filteredOrigins.map((place) => (
+              <OptionRow
+                key={place.id}
+                label={currentLang === "hi" && place.nameHi ? place.nameHi : place.name}
+                selected={originId === place.id}
+                onClick={() => setOriginId(place.id)}
+                icon={<MapPin className="w-4 h-4 text-[#4B5563]" aria-hidden="true" />}
+              />
+            ))}
           </div>
 
-          {/* Speed vs Safety Slider */}
-          <SpeedSafetySlider alpha={alpha} onChange={setAlpha} lang={lang} />
-        </div>
-      </div>
-
-      {/* Origin equals Destination validation */}
-      {originPlace.id === destPlace.id && (
-        <div className="p-4 rounded-xl bg-amber-950/60 border border-amber-800/60 text-amber-300 text-xs">
-          ⚠️{" "}
-          {lang === "hi"
-            ? "प्रस्थान और गंतव्य स्थान एक ही हैं। कृपया भिन्न स्थान चुनें।"
-            : "Origin and destination are identical. Please select different locations."}
-        </div>
+          {/* Single primary button */}
+          <div className="pt-4">
+            <Button
+              variant="primary"
+              onClick={() => setStep(2)}
+              disabled={!originId}
+              className="w-full"
+              data-testid="step-1-continue-btn"
+            >
+              {t("common.continue", "Continue")}
+            </Button>
+          </div>
+        </section>
       )}
 
-      {/* No Routes Available */}
-      {originPlace.id !== destPlace.id && options.length === 0 && (
-        <div className="p-6 rounded-2xl bg-slate-800/60 border border-slate-700 text-center space-y-2 text-slate-400">
-          <p className="text-sm font-semibold text-white">
-            {lang === "hi"
-              ? "इस रूट पर कोई सीधा या सिंगल-ट्रांसफर मार्ग उपलब्ध नहीं है"
-              : "No direct or single-transfer route found"}
-          </p>
-          <p className="text-xs">
-            {lang === "hi"
-              ? "कृपया किसी अन्य स्टॉप या पास के लैंडमार्क का चयन करें।"
-              : "Try choosing another origin or destination within our Lucknow transit corridors."}
-          </p>
-        </div>
-      )}
-
-      {/* Route Comparison Section */}
-      {options.length > 0 && (
-        <RouteCompareCard
-          fastest={fastest}
-          safer={safer}
-          selectedRouteId={selectedRouteId}
-          onSelectRoute={handleSelectRoute}
-          lang={lang}
-          stopNames={stopNamesMap}
-        />
-      )}
-
-      {/* Map Section with Route Overlays */}
-      <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-lg space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-bold text-white flex items-center gap-2">
-            <span>🗺️</span>
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* STEP 2: WHERE TO? (R3)                                        */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {step === 2 && (
+        <section aria-labelledby="step-2-title" className="space-y-4">
+          {/* Top context line */}
+          <div className="flex items-center justify-between text-xs text-[#4B5563] pb-1">
             <span>
-              {lang === "hi" ? "मार्ग दृश्य और स्टॉप सुरक्षा" : "Route Visualization & Boarding Security"}
+              {t("plan.fromContext", {
+                from: currentLang === "hi" && originPlace.nameHi ? originPlace.nameHi : originPlace.name,
+              })}
             </span>
-          </h2>
-
-          <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1.5 text-rose-400 font-semibold">
-              <span className="w-3 h-1 bg-rose-500 rounded" />
-              <span>{lang === "hi" ? "सबसे तेज़ (फास्टेस्ट)" : "Fastest Path (Crimson)"}</span>
-            </span>
-            <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-              <span className="w-3 h-1 bg-emerald-500 rounded" />
-              <span>{lang === "hi" ? "सुरक्षित (सेफ़र)" : "Safer Path (Emerald)"}</span>
-            </span>
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="text-[#0F5BD8] font-semibold underline min-h-[48px] px-2 flex items-center cursor-pointer"
+            >
+              {t("plan.change", "Change")}
+            </button>
           </div>
-        </div>
 
-        <div className="h-[460px] rounded-xl overflow-hidden border border-slate-700/60">
-          <MapView
-            routes={routes}
-            stops={stops}
-            buses={buses}
-            alerts={alerts}
-            isStale={isStale}
-            overlayRoutes={overlayRoutes}
-            originCoord={[originPlace.lat, originPlace.lng]}
-            destinationCoord={[destPlace.lat, destPlace.lng]}
+          <div>
+            <h1 id="step-2-title" className="text-xl font-bold text-[#111827]">
+              {t("plan.to.title", "Where do you want to go?")}
+            </h1>
+            <p className="text-xs text-[#4B5563] mt-0.5">
+              {currentLang === "hi"
+                ? "अपना गंतव्य स्थान चुनें या खोजें"
+                : "Choose or search your destination point in Lucknow"}
+            </p>
+          </div>
+
+          <SearchField
+            id="destination-search"
+            label={t("plan.to.title", "Where do you want to go?")}
+            hideLabel
+            placeholder={currentLang === "hi" ? "गंतव्य खोजें..." : "Type a place..."}
+            value={destSearch}
+            onChange={(e) => setDestSearch(e.target.value)}
+            data-testid="destination-search-input"
           />
-        </div>
-      </div>
+
+          {/* Popular places list */}
+          <div role="radiogroup" aria-label="Destination places" className="space-y-2">
+            {filteredDestinations.map((place) => (
+              <OptionRow
+                key={place.id}
+                label={currentLang === "hi" && place.nameHi ? place.nameHi : place.name}
+                selected={destId === place.id}
+                onClick={() => setDestId(place.id)}
+                icon={<MapPin className="w-4 h-4 text-[#4B5563]" aria-hidden="true" />}
+              />
+            ))}
+          </div>
+
+          {/* Single primary button */}
+          <div className="pt-4">
+            <Button
+              variant="primary"
+              onClick={() => setStep(3)}
+              disabled={!destId || destId === originId}
+              className="w-full"
+              data-testid="step-2-continue-btn"
+            >
+              {t("common.continue", "Continue")}
+            </Button>
+          </div>
+        </section>
+      )}
+
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* STEP 3: CHOOSE HOW TO TRAVEL (R4 CENTREPIECE)                 */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {step === 3 && (
+        <section aria-labelledby="step-3-title" className="space-y-4">
+          {/* Top context line */}
+          <div className="flex items-center justify-between text-xs text-[#4B5563]">
+            <span className="truncate pr-2">
+              {originPlace.name} → {destPlace.name}
+            </span>
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              className="text-[#0F5BD8] font-semibold underline shrink-0 min-h-[48px] px-1 flex items-center cursor-pointer"
+            >
+              {t("plan.change", "Change")}
+            </button>
+          </div>
+
+          <div>
+            <h1 id="step-3-title" className="text-xl font-bold text-[#111827]">
+              {t("plan.chooseTravel", "Choose how to travel")}
+            </h1>
+          </div>
+
+          {/* Empty state: No route available (U2-08) */}
+          {options.length === 0 ? (
+            <EmptyState
+              title={t("plan.noRouteTitle", "No direct route found")}
+              description={t("plan.noRouteDesc", "Try choosing another origin or destination.")}
+              action={
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="px-4 py-2 bg-[#0F5BD8] text-white text-sm font-semibold rounded-xl min-h-[48px] cursor-pointer"
+                >
+                  {t("plan.change", "Change destination")}
+                </button>
+              }
+            />
+          ) : (
+            <>
+              {/* Takeaway line (U2-05) - only when there is a tradeoff */}
+              {!isFastestAlsoSafer && extraMin > 0 && savedMin > 0 && (
+                <TakeawayLine extraMin={extraMin} savedMin={savedMin} />
+              )}
+
+              {/* Route Option Cards (U2-05) */}
+              <div role="radiogroup" aria-label="Route choices" className="space-y-3">
+                {/* Single card when fastest is also safest (U2-08) */}
+                {isFastestAlsoSafer && fastest ? (
+                  <RouteOptionCard
+                    option={fastest}
+                    isRecommended={true}
+                    isSelected={selectedRouteId === fastest.id}
+                    onSelect={() => setSelectedRouteId(fastest.id)}
+                    lang={currentLang}
+                  />
+                ) : (
+                  <>
+                    {/* Recommended Option (Safer via Stop B) */}
+                    {safer && (
+                      <RouteOptionCard
+                        option={safer}
+                        isRecommended={true}
+                        isSelected={selectedRouteId === safer.id}
+                        onSelect={() => setSelectedRouteId(safer.id)}
+                        lang={currentLang}
+                      />
+                    )}
+
+                    {/* Fastest Option (via Stop A) */}
+                    {fastest && fastest.id !== safer?.id && (
+                      <RouteOptionCard
+                        option={fastest}
+                        isRecommended={false}
+                        isSelected={selectedRouteId === fastest.id}
+                        onSelect={() => setSelectedRouteId(fastest.id)}
+                        lang={currentLang}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* "Show on map" text link (U2-07) */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  data-testid="show-on-map-link"
+                  onClick={() => setIsMapSheetOpen(true)}
+                  className="text-xs font-semibold text-[#0F5BD8] hover:underline flex items-center gap-1.5 min-h-[48px] cursor-pointer"
+                >
+                  <Map className="w-4 h-4" aria-hidden="true" />
+                  <span>{t("plan.showOnMap", "Show on map")}</span>
+                </button>
+              </div>
+
+              {/* "More details" Disclosure (U2-06) */}
+              <Disclosure title={t("plan.moreDetails", "More details")} className="bg-white border-[#D8DEE6]">
+                <div className="space-y-4 pt-2">
+                  {/* Walking minutes */}
+                  {selectedOption && (
+                    <div className="flex items-center gap-2 text-xs text-[#4B5563]">
+                      <MapPin className="w-4 h-4 text-[#0F5BD8]" aria-hidden="true" />
+                      <span>{t("plan.walkMin", { n: selectedOption.walkMin })}</span>
+                    </div>
+                  )}
+
+                  {/* WhyList factor bullets */}
+                  {stopRiskInfo && (
+                    <WhyList
+                      title={t("route.why", "Why this rating?")}
+                      items={[
+                        currentLang === "hi"
+                          ? `प्रतीक्षा समय (30%): ${stopRiskInfo.factors.wait > 0.15 ? "लंबा इंतज़ार" : "सामान्य"}`
+                          : `Wait time (30%): ${stopRiskInfo.factors.wait > 0.15 ? "Long wait" : "Normal wait"}`,
+                        currentLang === "hi"
+                          ? `रात का समय (20%): ${stopRiskInfo.factors.night > 0.1 ? "देर शाम" : "दिन"}`
+                          : `Night / Hour (20%): ${stopRiskInfo.factors.night > 0.1 ? "Evening interval" : "Daytime"}`,
+                        currentLang === "hi"
+                          ? `कम गतिविधि (20%): ${stopRiskInfo.factors.lowActivity > 0.1 ? "शांत क्षेत्र" : "सक्रिय क्षेत्र"}`
+                          : `Low activity (20%): ${stopRiskInfo.factors.lowActivity > 0.1 ? "Quiet area" : "Active area"}`,
+                        currentLang === "hi"
+                          ? `सुरक्षा रिपोर्टें (20%): ${stopRiskInfo.factors.reports > 0.1 ? "कम रोशनी की रिपोर्ट" : "कोई हालिया रिपोर्ट नहीं"}`
+                          : `Safety reports (20%): ${stopRiskInfo.factors.reports > 0.1 ? "Poor lighting reported" : "No recent reports"}`,
+                        currentLang === "hi"
+                          ? "शेड्यूल विश्वसनीयता (10%): सामान्य"
+                          : "Schedule reliability (10%): On schedule",
+                      ]}
+                    />
+                  )}
+
+                  {/* Faster ↔ Less waiting alone slider */}
+                  <div className="pt-2 border-t border-[#D8DEE6]">
+                    <SpeedSafetySlider alpha={alpha} onChange={setAlpha} lang={currentLang} />
+                  </div>
+                </div>
+              </Disclosure>
+
+              {/* Sticky "Continue with this route" action (U2-09) */}
+              <StickyAction>
+                <Button
+                  variant="primary"
+                  onClick={handleContinueWithRoute}
+                  disabled={!selectedRouteId}
+                  className="w-full"
+                  data-testid="continue-route-btn"
+                >
+                  {t("plan.continueWithRoute", "Continue with this route")}
+                </Button>
+              </StickyAction>
+            </>
+          )}
+        </section>
+      )}
+
+      {/* Map Bottom Sheet with dual-coded polylines (U2-07) */}
+      {isMapSheetOpen && (
+        <Sheet
+          position="absolute"
+          initialSnap="half"
+          title={t("plan.showOnMap", "Route Map")}
+          className="pb-6"
+        >
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs px-1">
+              <span className="flex items-center gap-1.5 font-semibold text-[#E11D48]">
+                <span className="w-3 h-1 bg-[#E11D48] rounded" />
+                <span>Fastest (solid)</span>
+              </span>
+              <span className="flex items-center gap-1.5 font-semibold text-[#059669]">
+                <span className="w-3 h-1 border-t-2 border-dashed border-[#059669]" />
+                <span>Safer (dashed)</span>
+              </span>
+            </div>
+
+            <div className="h-[320px] rounded-xl overflow-hidden border border-[#D8DEE6]">
+              <MapView
+                routes={routes}
+                stops={stops}
+                buses={buses}
+                alerts={alerts}
+                overlayRoutes={overlayRoutes}
+                originCoord={[originPlace.lat, originPlace.lng]}
+                destinationCoord={[destPlace.lat, destPlace.lng]}
+              />
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsMapSheetOpen(false)}
+                className="text-xs font-semibold text-[#4B5563] hover:text-[#111827] px-3 py-1.5 rounded-lg border border-[#D8DEE6] min-h-[48px]"
+              >
+                {t("common.done", "Done")}
+              </button>
+            </div>
+          </div>
+        </Sheet>
+      )}
     </div>
   );
 }
