@@ -441,10 +441,10 @@ docs: record live url and changelog v1.0.2
 Deploy: `firebase deploy --only hosting` (and `firestore:rules` for the default-deny rules).
 
 #### M0 exit checklist
-- [ ] All M0 tasks ticked.
-- [ ] Live URL works.
-- [ ] CI green on `main`.
-- [ ] No secrets in git history (`git log -p | grep -i key` sanity check).
+- [x] All M0 tasks ticked.
+- [x] Live URL works.
+- [x] CI green on `main`.
+- [x] No secrets in git history (`git log -p | grep -i key` sanity check).
 
 ---
 
