@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
+import axe from "axe-core";
 import "../src/i18n";
 import {
   Button,
@@ -25,6 +26,7 @@ import {
   AppShell,
 } from "../src/components/primitives";
 import { RiskBadge } from "../src/components/RiskBadge";
+import { UiKitPage } from "../src/pages/UiKit";
 
 describe("UI Primitives & Design System (Milestone U0)", () => {
   beforeEach(() => {
@@ -296,6 +298,22 @@ describe("UI Primitives & Design System (Milestone U0)", () => {
       expect(screen.getByTestId("simulated-data-badge")).toBeInTheDocument();
       expect(screen.getByText("App Content")).toBeInTheDocument();
       expect(screen.getByRole("navigation", { name: "Main Navigation" })).toBeInTheDocument();
+    });
+
+    it("verifies 0 axe accessibility violations on UiKitPage components", async () => {
+      const { container } = render(
+        <MemoryRouter>
+          <UiKitPage />
+        </MemoryRouter>,
+      );
+
+      const results = await axe.run(container, {
+        rules: {
+          "color-contrast": { enabled: false }, // jsdom does not calculate layout geometry for contrast
+        },
+      });
+
+      expect(results.violations).toEqual([]);
     });
   });
 });
