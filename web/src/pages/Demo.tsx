@@ -77,8 +77,10 @@ export function DemoPage() {
     channelRef.current = channel;
 
     channel.onmessage = (event) => {
-      const data = event.data as { type: string; tabId: string };
-      if (data.type === "PING_LEADER" && isLeaderTab) {
+      const data = event.data as { type: string; tabId?: string; overrides?: SimOverrides };
+      if (data.type === "DRIVER_OVERRIDE" && data.overrides) {
+        overridesRef.current = { ...overridesRef.current, ...data.overrides };
+      } else if (data.type === "PING_LEADER" && isLeaderTab) {
         channel.postMessage({ type: "LEADER_ALIVE", tabId: tabIdRef.current });
       } else if (data.type === "LEADER_ALIVE" && data.tabId !== tabIdRef.current) {
         setTabConflict(true);
@@ -204,8 +206,18 @@ export function DemoPage() {
         setSimState(incidentState);
         setActiveAlerts(alerts);
 
-        // Apply operator overrides from sim/overrides before publishing sim/live (D9)
-        const stateWithOverrides = applySimOverrides(incidentState, overridesRef.current);
+        // Apply operator overrides from sim/overrides and local storage (D9)
+        let mergedOverrides = { ...overridesRef.current };
+        try {
+          const localStr = localStorage.getItem("transitiq_sim_overrides");
+          if (localStr) {
+            const parsed = JSON.parse(localStr) as SimOverrides;
+            mergedOverrides = { ...mergedOverrides, ...parsed };
+          }
+        } catch {
+          // ignore
+        }
+        const stateWithOverrides = applySimOverrides(incidentState, mergedOverrides);
         const liveSnapshot = getSimLive(stateWithOverrides, hour, { routes, stops }, undefined, alerts);
 
         // Write to Firestore sim/live doc ONLY in live scenario (M3-24, M3-26: zero writes in replay mode)

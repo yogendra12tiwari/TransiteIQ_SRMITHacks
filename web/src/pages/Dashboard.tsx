@@ -8,6 +8,7 @@ import { FleetMonitoring } from "../components/FleetMonitoring";
 import { IncidentManagement } from "../components/IncidentManagement";
 import { TrendsAnalytics } from "../components/TrendsAnalytics";
 import { SystemHealthCard } from "../components/SystemHealthCard";
+import type { Bus, SimOverrides } from "@transitiq/shared";
 
 const PROMPT_VERSIONS = ["triageReport.v1.md", "explainRisk.v1.md", "recommendActions.v1.md"];
 
@@ -50,6 +51,45 @@ const INITIAL_PRIORITY_STOPS: PriorityStopRow[] = [
   },
 ];
 
+const DEFAULT_FLEET: Bus[] = [
+  {
+    id: "bus_route_23_1",
+    routeId: "route_23",
+    distanceAlongRouteM: 2800,
+    speedMps: 7.8,
+    lat: 26.8528,
+    lng: 80.9655,
+    status: "RUNNING",
+  },
+  {
+    id: "bus_route_7_1",
+    routeId: "route_7",
+    distanceAlongRouteM: 4100,
+    speedMps: 9.2,
+    lat: 26.8415,
+    lng: 80.952,
+    status: "RUNNING",
+  },
+  {
+    id: "bus_route_41_1",
+    routeId: "route_41",
+    distanceAlongRouteM: 1900,
+    speedMps: 8.4,
+    lat: 26.865,
+    lng: 80.978,
+    status: "DELAYED",
+  },
+  {
+    id: "bus_route_11_1",
+    routeId: "route_11",
+    distanceAlongRouteM: 3300,
+    speedMps: 6.5,
+    lat: 26.832,
+    lng: 80.938,
+    status: "RUNNING",
+  },
+];
+
 export function DashboardPage() {
   const { data: liveData } = useLiveState();
   const { routes, stops } = useNetwork();
@@ -80,7 +120,35 @@ export function DashboardPage() {
     });
   }, [stops]);
 
-  const buses = liveData?.buses ?? [];
+  const rawBuses = (liveData?.buses && liveData.buses.length > 0) ? liveData.buses : DEFAULT_FLEET;
+
+  const effectiveBuses = useMemo<Bus[]>(() => {
+    let overrides: SimOverrides = {};
+    try {
+      const stored = localStorage.getItem("transitiq_sim_overrides");
+      if (stored) overrides = JSON.parse(stored);
+    } catch {
+      // ignore
+    }
+
+    return rawBuses.map((b) => {
+      const ov = overrides[b.id];
+      if (ov) {
+        return {
+          ...b,
+          driverStatus: ov.driverStatus ?? b.driverStatus,
+          status: ov.driverStatus === "STALLED" ? "STALLED" : ov.driverStatus === "OUT_OF_SERVICE" ? "GHOST" : b.status,
+          lat: ov.pingLat ?? b.lat,
+          lng: ov.pingLng ?? b.lng,
+        };
+      }
+      return b;
+    });
+  }, [rawBuses]);
+
+  const delayedOrStalledCount = effectiveBuses.filter(
+    (b) => b.status === "DELAYED" || b.status === "STALLED" || b.driverStatus === "STALLED",
+  ).length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
@@ -122,9 +190,13 @@ export function DashboardPage() {
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
           <span className="text-xs text-slate-400 font-medium">Delayed Buses Now</span>
           <div className="text-2xl font-extrabold text-white mt-1">
-            {liveData?.alerts.filter((a) => a.type === "DELAY").length ?? 1}
+            {delayedOrStalledCount}
           </div>
-          <span className="text-[11px] text-rose-400 mt-1 block">Corridor 10: Bus 23 delayed 7m</span>
+          <span className="text-[11px] text-rose-400 mt-1 block">
+            {effectiveBuses.some((b) => b.status === "STALLED" || b.driverStatus === "STALLED")
+              ? "Corridor 10: Bus 23 reported STALLED"
+              : "Corridor 10: Bus 23 delayed 7m"}
+          </span>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
@@ -256,7 +328,9 @@ export function DashboardPage() {
       )}
 
       {/* Tab 2: Fleet & Delays */}
-      {activeTab === "fleet" && <FleetMonitoring buses={buses} routes={routes} stops={stops} />}
+      {activeTab === "fleet" && (
+        <FleetMonitoring buses={effectiveBuses} routes={routes} stops={stops} />
+      )}
 
       {/* Tab 3: Incidents & Review */}
       {activeTab === "incidents" && <IncidentManagement />}

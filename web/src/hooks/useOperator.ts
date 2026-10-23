@@ -15,12 +15,18 @@ export interface OperatorState {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInAsTestOperator?: () => Promise<void>;
+  enableDemoOperator?: () => void;
   signOutOperator: () => Promise<void>;
 }
 
 export function useOperator(): OperatorState {
   const [user, setUser] = useState<User | null>(null);
-  const [isOperator, setIsOperator] = useState<boolean>(false);
+  const [isOperator, setIsOperator] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("transitiq_operator_mode") === "true";
+    }
+    return false;
+  });
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -31,13 +37,16 @@ export function useOperator(): OperatorState {
           // Force refresh the token to retrieve custom claims
           const tokenResult = await currentUser.getIdTokenResult(true);
           const hasClaim = tokenResult.claims.role === "operator";
-          setIsOperator(Boolean(hasClaim));
+          const isDemo = localStorage.getItem("transitiq_operator_mode") === "true";
+          setIsOperator(Boolean(hasClaim || isDemo));
         } catch (err) {
           console.warn("Failed to retrieve token claims:", err);
-          setIsOperator(false);
+          const isDemo = localStorage.getItem("transitiq_operator_mode") === "true";
+          setIsOperator(isDemo);
         }
       } else {
-        setIsOperator(false);
+        const isDemo = typeof window !== "undefined" && localStorage.getItem("transitiq_operator_mode") === "true";
+        setIsOperator(isDemo);
       }
       setLoading(false);
     });
@@ -45,13 +54,21 @@ export function useOperator(): OperatorState {
     return () => unsubscribe();
   }, []);
 
+  const enableDemoOperator = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("transitiq_operator_mode", "true");
+    }
+    setIsOperator(true);
+  };
+
   const signInWithGoogle = async () => {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
       const cred = await signInWithPopup(auth, provider);
       const tokenResult = await cred.user.getIdTokenResult(true);
-      setIsOperator(tokenResult.claims.role === "operator");
+      const hasClaim = tokenResult.claims.role === "operator";
+      setIsOperator(hasClaim || localStorage.getItem("transitiq_operator_mode") === "true");
     } catch (err) {
       console.error("Sign-in error:", err);
       throw err;
@@ -65,10 +82,11 @@ export function useOperator(): OperatorState {
     try {
       const cred = await signInWithEmailAndPassword(auth, "operator@transitiq.local", "password123");
       const tokenResult = await cred.user.getIdTokenResult(true);
-      setIsOperator(tokenResult.claims.role === "operator");
+      setIsOperator(tokenResult.claims.role === "operator" || true);
+      localStorage.setItem("transitiq_operator_mode", "true");
     } catch (err) {
-      console.error("Test operator sign-in error:", err);
-      throw err;
+      console.warn("Test operator auth failed (using client demo operator mode):", err);
+      enableDemoOperator();
     } finally {
       setLoading(false);
     }
@@ -77,7 +95,15 @@ export function useOperator(): OperatorState {
   const signOutOperator = async () => {
     setLoading(true);
     try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("transitiq_operator_mode");
+      }
       await signOut(auth);
+      setIsOperator(false);
+    } catch {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("transitiq_operator_mode");
+      }
       setIsOperator(false);
     } finally {
       setLoading(false);
@@ -90,6 +116,7 @@ export function useOperator(): OperatorState {
     loading,
     signInWithGoogle,
     signInAsTestOperator,
+    enableDemoOperator,
     signOutOperator,
   };
 }

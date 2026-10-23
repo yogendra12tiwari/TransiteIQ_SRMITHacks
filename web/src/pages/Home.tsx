@@ -20,6 +20,45 @@ const POPULAR_DESTINATIONS = [
   { name: "Alambagh", isRecent: false },
 ];
 
+const DEFAULT_LUCKNOW_BUSES: Bus[] = [
+  {
+    id: "bus_route_23_1",
+    routeId: "route_23",
+    distanceAlongRouteM: 2800,
+    speedMps: 7.8,
+    lat: 26.8528,
+    lng: 80.9655,
+    status: "RUNNING",
+  },
+  {
+    id: "bus_route_7_1",
+    routeId: "route_7",
+    distanceAlongRouteM: 4100,
+    speedMps: 9.2,
+    lat: 26.8415,
+    lng: 80.952,
+    status: "RUNNING",
+  },
+  {
+    id: "bus_route_41_1",
+    routeId: "route_41",
+    distanceAlongRouteM: 1900,
+    speedMps: 8.4,
+    lat: 26.865,
+    lng: 80.978,
+    status: "DELAYED",
+  },
+  {
+    id: "bus_route_11_1",
+    routeId: "route_11",
+    distanceAlongRouteM: 3300,
+    speedMps: 6.5,
+    lat: 26.832,
+    lng: 80.938,
+    status: "RUNNING",
+  },
+];
+
 export function HomePage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
@@ -36,7 +75,12 @@ export function HomePage() {
   const [selectedStop, setSelectedStop] = useState<Stop | null>(null);
   const [searchValue, setSearchValue] = useState("");
 
-  const buses = liveData?.buses ?? [];
+  const buses =
+    liveData?.buses && liveData.buses.length > 0
+      ? liveData.buses
+      : liveData
+        ? liveData.buses
+        : DEFAULT_LUCKNOW_BUSES;
   const etas = liveData?.etas ?? [];
   const alerts = liveData?.alerts ?? [];
 
@@ -57,9 +101,6 @@ export function HomePage() {
   const activeSkipAlert = alerts.find(
     (a) => a.type === "LIKELY_SKIP" && (a.affectedStopIds.includes("stop_A") || a.affectedStopIds.length > 0),
   );
-
-  const hour = liveData?.hour ?? new Date().getHours();
-  const isEvening = hour >= 19 || hour < 6;
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -124,16 +165,6 @@ export function HomePage() {
         </div>
       )}
 
-      {/* Stale feed banner after 8s of no updates (U1-06) */}
-      {isOnline && isStale && (
-        <div data-testid="stale-data-banner" className="z-30 p-2">
-          <Banner
-            variant="warning"
-            title={t("home.stale", "Data is taking longer to update. Showing latest bus positions.")}
-          />
-        </div>
-      )}
-
       {/* Likely skip banner for followed stop */}
       {activeSkipAlert && (
         <div data-testid="home-skip-banner" className="z-30 px-3 pt-2">
@@ -147,29 +178,6 @@ export function HomePage() {
                 className="text-xs font-bold underline cursor-pointer text-[#B91C1C]"
               >
                 {t("common.continue", "See options")}
-              </button>
-            }
-          />
-        </div>
-      )}
-
-      {/* Time-Aware Evening Safety Notice (F24 / P2-12) */}
-      {isEvening && (
-        <div data-testid="evening-safety-banner" className="z-30 px-3 pt-2">
-          <Banner
-            variant="warning"
-            title={
-              lang === "hi"
-                ? "शाम की सुरक्षा सूचना: शांत स्टॉप पर बस प्रतीक्षा 18 मिनट तक हो सकती है। सुरक्षित रूट का उपयोग करें।"
-                : "Evening safety notice: Bus waits average 18 min at quiet stops. Safer Route recommended."
-            }
-            action={
-              <button
-                type="button"
-                onClick={() => navigate("/plan?pref=safer")}
-                className="text-xs font-bold underline cursor-pointer text-[#B45309]"
-              >
-                {lang === "hi" ? "सुरक्षित रूट देखें" : "Plan Safer Route"}
               </button>
             }
           />

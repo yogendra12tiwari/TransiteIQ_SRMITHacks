@@ -198,7 +198,7 @@ export function MapView({
       {isStale && (
         <div
           data-testid="stale-data-banner"
-          className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] px-4 py-1.5 rounded-full bg-amber-500/90 text-slate-950 font-semibold text-xs shadow-xl backdrop-blur flex items-center space-x-2 select-none"
+          className="absolute top-3 right-3 z-[1000] px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-amber-500/50 text-amber-300 font-medium text-xs shadow-xl backdrop-blur flex items-center space-x-2 select-none"
         >
           <span className="animate-spin text-sm">⏳</span>
           <span>Simulation feed paused / waiting for updates</span>

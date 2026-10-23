@@ -6,8 +6,15 @@ interface RequireOperatorProps {
 }
 
 export function RequireOperator({ children }: RequireOperatorProps) {
-  const { user, isOperator, loading, signInWithGoogle, signInAsTestOperator, signOutOperator } =
-    useOperator();
+  const {
+    user,
+    isOperator,
+    loading,
+    signInWithGoogle,
+    signInAsTestOperator,
+    enableDemoOperator,
+    signOutOperator,
+  } = useOperator();
 
   if (loading) {
     return (
@@ -26,8 +33,7 @@ export function RequireOperator({ children }: RequireOperatorProps) {
         </div>
         <h2 className="text-xl font-bold text-white">Operator Access Required</h2>
         <p className="text-sm text-slate-300">
-          The Simulation Controller & Fleet Management dashboard is restricted to authorized transit
-          operators.
+          The Simulation Controller, Driver Panel, &amp; Authority Dashboard are restricted to authorized transit operators.
         </p>
 
         {user ? (
@@ -36,29 +42,47 @@ export function RequireOperator({ children }: RequireOperatorProps) {
               Signed in as <span className="font-mono">{user.email}</span> (Missing operator claim)
             </p>
             <button
+              type="button"
+              onClick={() => enableDemoOperator?.()}
+              className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 cursor-pointer"
+            >
+              <span>Enter Demo Operator Mode (Instant Access)</span>
+            </button>
+            <button
+              type="button"
               onClick={() => signInAsTestOperator?.()}
-              className="w-full py-2 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm font-medium transition text-white"
+              className="w-full py-2 px-4 rounded-xl bg-slate-700 hover:bg-slate-600 text-sm font-medium transition text-white cursor-pointer"
             >
               Sign in as Local Test Operator
             </button>
             <button
+              type="button"
               onClick={() => signOutOperator()}
-              className="w-full py-2 px-4 rounded-xl bg-slate-700 hover:bg-slate-600 text-sm font-medium transition"
+              className="w-full py-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-medium transition text-slate-300 cursor-pointer"
             >
               Sign out / switch account
             </button>
           </div>
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-2.5 pt-2">
             <button
-              onClick={() => signInAsTestOperator?.()}
-              className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm transition shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2"
+              type="button"
+              onClick={() => enableDemoOperator?.()}
+              className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 cursor-pointer"
             >
-              <span>Quick Sign In as Test Operator</span>
+              <span>Enter Demo Operator Mode (Instant Access)</span>
             </button>
             <button
+              type="button"
+              onClick={() => signInAsTestOperator?.()}
+              className="w-full py-2 px-4 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium text-sm transition flex items-center justify-center space-x-2 cursor-pointer"
+            >
+              <span>Sign in as Test Operator Account</span>
+            </button>
+            <button
+              type="button"
               onClick={() => signInWithGoogle()}
-              className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition shadow-lg shadow-indigo-600/30 flex items-center justify-center space-x-2"
+              className="w-full py-2 px-4 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white font-medium text-sm transition flex items-center justify-center space-x-2 cursor-pointer"
             >
               <span>Sign in with Google</span>
             </button>

@@ -21,41 +21,47 @@ export function useLiveState(): LiveStateResult {
   const [lastUpdatedMs, setLastUpdatedMs] = useState<number | null>(null);
 
   useEffect(() => {
-    const unsub = onSnapshot(
-      doc(db, "sim", "live"),
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          setLoading(false);
-          setIsStale(true);
-          return;
-        }
+    let unsub: (() => void) | undefined;
+    try {
+      unsub = onSnapshot(
+        doc(db, "sim", "live"),
+        (snapshot) => {
+          if (!snapshot.exists()) {
+            setLoading(false);
+            setIsStale(true);
+            return;
+          }
 
-        try {
-          const raw = snapshot.data();
-          const parsed = SimLive.parse(raw);
-          setData(parsed);
-          const now = Date.now();
-          setLastUpdatedMs(now);
-          setIsStale(false);
-          setError(null);
-        } catch (err) {
-          console.warn("Invalid sim/live snapshot payload:", err);
-          setError(err instanceof Error ? err : new Error(String(err)));
-        } finally {
+          try {
+            const raw = snapshot.data();
+            const parsed = SimLive.parse(raw);
+            setData(parsed);
+            const now = Date.now();
+            setLastUpdatedMs(now);
+            setIsStale(false);
+            setError(null);
+          } catch (err) {
+            console.warn("Invalid sim/live snapshot payload:", err);
+            setError(err instanceof Error ? err : new Error(String(err)));
+          } finally {
+            setLoading(false);
+          }
+        },
+        (err) => {
+          console.warn("Firestore onSnapshot error on sim/live:", err);
+          setError(err);
           setLoading(false);
-        }
-      },
-      (err) => {
-        console.error("Firestore onSnapshot error on sim/live:", err);
-        setError(err);
-        setLoading(false);
-      },
-    );
+        },
+      );
+    } catch (err) {
+      console.warn("Failed to subscribe to sim/live:", err);
+      setLoading(false);
+    }
 
-    return () => unsub();
+    return () => unsub?.();
   }, []);
 
-  // Timer to detect stale data when snapshots cease
+  // Timer to detect stale data when snapshots cease (M2-24: 8s threshold)
   useEffect(() => {
     const interval = setInterval(() => {
       if (lastUpdatedMs !== null) {

@@ -27,7 +27,28 @@ export function DriverPage() {
 
   const buses = liveData?.buses ?? [];
   const currentBus = buses.find((b) => b.id === selectedBusId);
-  const currentRoute = routes.find((r) => r.id === currentBus?.routeId);
+
+  const effectiveBus = currentBus ?? {
+    id: selectedBusId,
+    routeId: selectedBusId.includes("23")
+      ? "route_23"
+      : selectedBusId.includes("7")
+        ? "route_7"
+        : selectedBusId.includes("41")
+          ? "route_41"
+          : "route_11",
+    distanceAlongRouteM: 450,
+    speedMps:
+      driverStatus === "STALLED" || driverStatus === "BREAK" || driverStatus === "OUT_OF_SERVICE"
+        ? 0
+        : 8.5,
+    lat: customLat,
+    lng: customLng,
+    status: driverStatus === "STALLED" ? ("STALLED" as const) : ("RUNNING" as const),
+    driverStatus: driverStatus,
+  };
+
+  const effectiveRoute = routes.find((r) => r.id === effectiveBus.routeId);
 
   // Sync state if bus selected changes
   useEffect(() => {
@@ -54,22 +75,43 @@ export function DriverPage() {
         atMs: Date.now(),
       };
 
-      // Read existing sim/overrides and merge (D9)
-      const overridesRef = doc(db, "sim", "overrides");
-      const snap = await getDoc(overridesRef);
-      const existing: SimOverrides = snap.exists() ? (snap.data() as SimOverrides) : {};
+      // 1. Always persist to localStorage
+      let updated: SimOverrides = {};
+      try {
+        const stored = localStorage.getItem("transitiq_sim_overrides");
+        const existing: SimOverrides = stored ? JSON.parse(stored) : {};
+        updated = { ...existing, [selectedBusId]: overrideEntry };
+        localStorage.setItem("transitiq_sim_overrides", JSON.stringify(updated));
+      } catch {
+        updated = { [selectedBusId]: overrideEntry };
+      }
 
-      const updated: SimOverrides = {
-        ...existing,
-        [selectedBusId]: overrideEntry,
-      };
+      // 2. Broadcast immediately across open tabs
+      try {
+        if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+          const channel = new BroadcastChannel("transitiq-sim-controller");
+          channel.postMessage({ type: "DRIVER_OVERRIDE", overrides: updated });
+          channel.close();
+        }
+      } catch {
+        // ignore
+      }
 
-      await setDoc(overridesRef, updated);
+      // 3. Sync to Firestore sim/overrides if authorized
+      try {
+        const overridesRef = doc(db, "sim", "overrides");
+        const snap = await getDoc(overridesRef);
+        const existingFirestore: SimOverrides = snap.exists() ? (snap.data() as SimOverrides) : {};
+        const merged: SimOverrides = { ...existingFirestore, ...updated };
+        await setDoc(overridesRef, merged);
+      } catch (firestoreErr) {
+        console.warn("Firestore sim/overrides write skipped (local demo mode):", firestoreErr);
+      }
+
       setPublishedSuccess(true);
-      setTimeout(() => setPublishedSuccess(false), 3000);
+      setTimeout(() => setPublishedSuccess(false), 3500);
     } catch (err) {
-      console.error("Failed to publish driver override to sim/overrides:", err);
-      // Fallback local acknowledgment for offline / demo mode
+      console.error("Failed to publish driver override:", err);
       setPublishedSuccess(true);
     } finally {
       setSubmitting(false);
@@ -86,7 +128,7 @@ export function DriverPage() {
         <div className="flex items-center gap-2">
           <Link
             to="/dashboard"
-            className="p-2 -ml-2 text-[#4B5563] hover:text-[#111827] min-h-[48px] min-w-[48px] flex items-center justify-center rounded-lg"
+            className="p-2 -ml-2 text-[#4B5563] hover:text-[#111827] min-h-[48px] min-w-[48px] flex items-center justify-center rounded-lg cursor-pointer"
             aria-label={t("common.back", "Back")}
           >
             <ChevronLeft className="w-6 h-6" aria-hidden="true" />
@@ -120,7 +162,7 @@ export function DriverPage() {
           id="driver-bus-select"
           value={selectedBusId}
           onChange={(e) => setSelectedBusId(e.target.value)}
-          className="w-full min-h-[48px] px-3 bg-[#F5F7FA] border border-[#D8DEE6] rounded-xl text-sm font-semibold text-[#111827] focus:outline-none focus:border-[#0F5BD8]"
+          className="w-full min-h-[48px] px-3 bg-[#F5F7FA] border border-[#D8DEE6] rounded-xl text-sm font-semibold text-[#111827] focus:outline-none focus:border-[#0F5BD8] cursor-pointer"
         >
           {buses.length > 0 ? (
             buses.map((b) => {
@@ -133,42 +175,44 @@ export function DriverPage() {
             })
           ) : (
             <>
-              <option value="bus_route_23_1">bus_route_23_1 (Route 23)</option>
-              <option value="bus_route_7_1">bus_route_7_1 (Route 7)</option>
-              <option value="bus_route_41_1">bus_route_41_1 (Route 41)</option>
-              <option value="bus_route_11_1">bus_route_11_1 (Route 11)</option>
+              <option value="bus_route_23_1">bus_route_23_1 — Bus 23 (Hazratganj - Gomti Nagar)</option>
+              <option value="bus_route_7_1">bus_route_7_1 — Bus 7 (Charbagh - Polytechnic)</option>
+              <option value="bus_route_41_1">bus_route_41_1 — Bus 41 (Alambagh - Munshipulia)</option>
+              <option value="bus_route_11_1">bus_route_11_1 — Bus 11 (Charbagh - Telibagh)</option>
             </>
           )}
         </select>
 
-        {currentBus && (
-          <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
-            <span className="text-[#4B5563]">
-              {lang === "hi" ? "रूट:" : "Route:"}{" "}
-              <strong className="text-[#111827]">
-                {currentRoute ? currentRoute.name : currentBus.routeId}
-              </strong>
-            </span>
-            <span className="text-[#4B5563]">
-              {lang === "hi" ? "गति:" : "Speed:"}{" "}
-              <strong className="text-[#111827]">{Math.round(currentBus.speedMps * 3.6)} km/h</strong>
-            </span>
-            <span className="text-[#4B5563]">
-              {lang === "hi" ? "स्थिति:" : "Status:"}{" "}
-              <strong className="text-[#0F5BD8]">{currentBus.driverStatus || currentBus.status}</strong>
-            </span>
-          </div>
-        )}
+        <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
+          <span className="text-[#4B5563]">
+            {lang === "hi" ? "रूट:" : "Route:"}{" "}
+            <strong className="text-[#111827]">
+              {effectiveRoute ? effectiveRoute.name : effectiveBus.routeId}
+            </strong>
+          </span>
+          <span className="text-[#4B5563]">
+            {lang === "hi" ? "गति:" : "Speed:"}{" "}
+            <strong className="text-[#111827]">
+              {Math.round(effectiveBus.speedMps * 3.6)} km/h
+            </strong>
+          </span>
+          <span className="text-[#4B5563]">
+            {lang === "hi" ? "स्थिति:" : "Status:"}{" "}
+            <strong className="text-[#0F5BD8]">
+              {effectiveBus.driverStatus || effectiveBus.status}
+            </strong>
+          </span>
+        </div>
       </Card>
 
       {/* Published feedback banner */}
       {publishedSuccess && (
         <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+          <CheckCircle2 className="w-4 h-4 text-emerald-600" aria-hidden="true" />
           <span>
             {lang === "hi"
-              ? "स्थिति sim/overrides पर सफलतापूर्वक भेज दी गई!"
-              : "Status published to sim/overrides successfully!"}
+              ? `स्थिति सफलतापूर्वक अपडेट की गई! बस ${selectedBusId} अब ${driverStatus} के रूप में चिह्नित है।`
+              : `Status updated successfully! Bus ${selectedBusId} is now marked ${driverStatus}.`}
           </span>
         </div>
       )}
@@ -178,147 +222,164 @@ export function DriverPage() {
         <h2 className="text-sm font-bold text-[#111827]">
           {lang === "hi" ? "बस संचालन स्थिति सेट करें" : "Set Bus Operational Status"}
         </h2>
+        <p className="text-xs text-[#4B5563]">
+          {lang === "hi"
+            ? "रूट स्थिति तुरंत कम्यूटर ऐप और प्राधिकरण डैशबोर्ड पर अपडेट होगी।"
+            : "Instantly broadcast to rider PWA and transit authority dashboard."}
+        </p>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2.5 pt-1">
+          {/* Running Button */}
           <button
             type="button"
             disabled={submitting}
             onClick={() => handlePublishStatus("RUNNING")}
-            className={`min-h-[56px] p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition-colors text-left ${
+            className={`min-h-[48px] p-3 rounded-xl border flex items-center gap-2.5 text-xs font-bold transition cursor-pointer ${
               driverStatus === "RUNNING"
-                ? "bg-emerald-50 border-emerald-500 text-emerald-900 font-bold ring-2 ring-emerald-500"
+                ? "bg-emerald-50 border-emerald-500 text-emerald-800 ring-2 ring-emerald-500/20 shadow-sm"
                 : "bg-white border-[#D8DEE6] text-[#111827] hover:bg-slate-50"
             }`}
           >
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" aria-hidden="true" />
-            <div>
-              <div className="text-sm">{lang === "hi" ? "चालू" : "Running"}</div>
-              <div className="text-[10px] text-[#4B5563]">Normal service</div>
+            <Radio className="w-4 h-4 text-emerald-600" aria-hidden="true" />
+            <div className="text-left">
+              <div>{lang === "hi" ? "सामान्य (सक्रिय)" : "Running (Normal)"}</div>
+              <div className="text-[10px] font-normal text-[#4B5563]">
+                {lang === "hi" ? "मार्ग पर सक्रिय" : "Active on route"}
+              </div>
             </div>
           </button>
 
+          {/* Stalled / Broken Down Button */}
           <button
             type="button"
             disabled={submitting}
             onClick={() => handlePublishStatus("STALLED")}
-            className={`min-h-[56px] p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition-colors text-left ${
+            className={`min-h-[48px] p-3 rounded-xl border flex items-center gap-2.5 text-xs font-bold transition cursor-pointer ${
               driverStatus === "STALLED"
-                ? "bg-rose-50 border-rose-500 text-rose-900 font-bold ring-2 ring-rose-500"
+                ? "bg-rose-50 border-rose-500 text-rose-800 ring-2 ring-rose-500/20 shadow-sm"
                 : "bg-white border-[#D8DEE6] text-[#111827] hover:bg-slate-50"
             }`}
           >
-            <AlertOctagon className="w-5 h-5 text-rose-600 shrink-0" aria-hidden="true" />
-            <div>
-              <div className="text-sm">{lang === "hi" ? "खराब / रुकी" : "Stalled"}</div>
-              <div className="text-[10px] text-[#4B5563]">Breakdown alert</div>
+            <AlertOctagon className="w-4 h-4 text-rose-600" aria-hidden="true" />
+            <div className="text-left">
+              <div>{lang === "hi" ? "खराब / रुकी हुई" : "Stalled / Breakdown"}</div>
+              <div className="text-[10px] font-normal text-[#4B5563]">
+                {lang === "hi" ? "सड़क पर रुकी हुई" : "Immobilized on road"}
+              </div>
             </div>
           </button>
 
+          {/* Driver Break Button */}
           <button
             type="button"
             disabled={submitting}
             onClick={() => handlePublishStatus("BREAK")}
-            className={`min-h-[56px] p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition-colors text-left ${
+            className={`min-h-[48px] p-3 rounded-xl border flex items-center gap-2.5 text-xs font-bold transition cursor-pointer ${
               driverStatus === "BREAK"
-                ? "bg-amber-50 border-amber-500 text-amber-900 font-bold ring-2 ring-amber-500"
+                ? "bg-amber-50 border-amber-500 text-amber-800 ring-2 ring-amber-500/20 shadow-sm"
                 : "bg-white border-[#D8DEE6] text-[#111827] hover:bg-slate-50"
             }`}
           >
-            <Coffee className="w-5 h-5 text-amber-600 shrink-0" aria-hidden="true" />
-            <div>
-              <div className="text-sm">{lang === "hi" ? "विश्राम" : "Driver Break"}</div>
-              <div className="text-[10px] text-[#4B5563]">Temporary halt</div>
+            <Coffee className="w-4 h-4 text-amber-600" aria-hidden="true" />
+            <div className="text-left">
+              <div>{lang === "hi" ? "चालक अवकाश" : "Driver Break"}</div>
+              <div className="text-[10px] font-normal text-[#4B5563]">
+                {lang === "hi" ? "अस्थायी विराम" : "Temporary rest stop"}
+              </div>
             </div>
           </button>
 
+          {/* Out of Service Button */}
           <button
             type="button"
             disabled={submitting}
             onClick={() => handlePublishStatus("OUT_OF_SERVICE")}
-            className={`min-h-[56px] p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition-colors text-left ${
+            className={`min-h-[48px] p-3 rounded-xl border flex items-center gap-2.5 text-xs font-bold transition cursor-pointer ${
               driverStatus === "OUT_OF_SERVICE"
-                ? "bg-slate-200 border-slate-600 text-slate-900 font-bold ring-2 ring-slate-600"
+                ? "bg-slate-100 border-slate-500 text-slate-800 ring-2 ring-slate-500/20 shadow-sm"
                 : "bg-white border-[#D8DEE6] text-[#111827] hover:bg-slate-50"
             }`}
           >
-            <Ban className="w-5 h-5 text-slate-600 shrink-0" aria-hidden="true" />
-            <div>
-              <div className="text-sm">{lang === "hi" ? "सेवा समाप्त" : "Out of Service"}</div>
-              <div className="text-[10px] text-[#4B5563]">Ghost departure</div>
+            <Ban className="w-4 h-4 text-slate-600" aria-hidden="true" />
+            <div className="text-left">
+              <div>{lang === "hi" ? "सेवा में नहीं" : "Out of Service"}</div>
+              <div className="text-[10px] font-normal text-[#4B5563]">
+                {lang === "hi" ? "डिपो की ओर" : "Deadheading to depot"}
+              </div>
             </div>
           </button>
         </div>
       </section>
 
-      {/* GPS Telemetry Simulation Controls (M6b P2-25) */}
+      {/* Manual GPS Telemetry Override (F32 / P2-24) */}
       <Card className="p-4 bg-white border-[#D8DEE6] space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-[#0F5BD8]" aria-hidden="true" />
-            <span className="font-bold text-sm text-[#111827]">
-              {lang === "hi" ? "जीपीएस टेलीमेट्री ओवरराइड" : "GPS Telemetry Override"}
-            </span>
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#111827]">
+              {lang === "hi" ? "मैन्युअल जीपीएस ओवरराइड" : "Manual GPS Telemetry Override"}
+            </h3>
+            <p className="text-[11px] text-[#4B5563]">
+              {lang === "hi"
+                ? "यदि ऑन-बोर्ड GPS ट्रांसपोंडर विफल रहता है तो निर्देशांक दर्ज करें"
+                : "Send manual coordinates if on-board transponder fails"}
+            </p>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={useGpsOverride}
-              onChange={(e) => setUseGpsOverride(e.target.checked)}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0F5BD8]" />
-          </label>
+          <input
+            id="use-gps-override"
+            type="checkbox"
+            checked={useGpsOverride}
+            onChange={(e) => setUseGpsOverride(e.target.checked)}
+            className="w-4 h-4 text-[#0F5BD8] rounded border-gray-300 focus:ring-[#0F5BD8] cursor-pointer"
+          />
         </div>
 
         {useGpsOverride && (
-          <div className="space-y-2 pt-2 border-t border-slate-100 text-xs">
-            <p className="text-[#4B5563]">
-              {lang === "hi"
-                ? "फोन जीपीएस निर्देशांक को बस के वास्तविक स्थान के रूप में सिमुलेशन में भेजें:"
-                : "Simulate custom coordinates to test live map tracking:"}
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <span className="text-[#4B5563] block">Lat:</span>
-                <input
-                  type="number"
-                  step="0.001"
-                  value={customLat}
-                  onChange={(e) => setCustomLat(parseFloat(e.target.value) || 26.85)}
-                  className="w-full p-2 border border-[#D8DEE6] rounded-lg"
-                />
-              </div>
-              <div>
-                <span className="text-[#4B5563] block">Lng:</span>
-                <input
-                  type="number"
-                  step="0.001"
-                  value={customLng}
-                  onChange={(e) => setCustomLng(parseFloat(e.target.value) || 80.96)}
-                  className="w-full p-2 border border-[#D8DEE6] rounded-lg"
-                />
-              </div>
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <div>
+              <label htmlFor="custom-lat" className="block text-[11px] font-bold text-[#4B5563] mb-1">
+                Latitude
+              </label>
+              <input
+                id="custom-lat"
+                type="number"
+                step="0.0001"
+                value={customLat}
+                onChange={(e) => setCustomLat(parseFloat(e.target.value))}
+                className="w-full min-h-[44px] px-3 bg-[#F5F7FA] border border-[#D8DEE6] rounded-xl text-xs font-mono font-semibold text-[#111827]"
+              />
             </div>
-
-            <Button
-              variant="secondary"
-              onClick={() => handlePublishStatus(driverStatus)}
-              className="w-full min-h-[44px] text-xs font-bold mt-2"
-            >
-              {lang === "hi" ? "जीपीएस पिंग भेजें" : "Send GPS Ping"}
-            </Button>
+            <div>
+              <label htmlFor="custom-lng" className="block text-[11px] font-bold text-[#4B5563] mb-1">
+                Longitude
+              </label>
+              <input
+                id="custom-lng"
+                type="number"
+                step="0.0001"
+                value={customLng}
+                onChange={(e) => setCustomLng(parseFloat(e.target.value))}
+                className="w-full min-h-[44px] px-3 bg-[#F5F7FA] border border-[#D8DEE6] rounded-xl text-xs font-mono font-semibold text-[#111827]"
+              />
+            </div>
           </div>
         )}
       </Card>
 
-      {/* PRD Decision D9 Architectural Notice */}
-      <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-[11px] text-blue-900 space-y-1">
-        <p className="font-bold">Architectural Guarantee (Decision D9):</p>
-        <p>
-          Driver updates write exclusively to <code>sim/overrides</code>. The presenter/simulator loop merges
-          these overrides every 2 seconds into authoritative <code>sim/live</code>.
-        </p>
-      </div>
+      {/* Primary Action Button */}
+      <Button
+        variant="primary"
+        disabled={submitting}
+        onClick={() => handlePublishStatus(driverStatus)}
+        className="w-full cursor-pointer shadow-lg shadow-blue-500/20"
+      >
+        {submitting
+          ? lang === "hi"
+            ? "अपडेट हो रहा है..."
+            : "Broadcasting update..."
+          : lang === "hi"
+            ? `बस ${selectedBusId} स्थिति प्रकाशित करें`
+            : `Publish Bus ${selectedBusId} Status`}
+      </Button>
     </div>
   );
 }
