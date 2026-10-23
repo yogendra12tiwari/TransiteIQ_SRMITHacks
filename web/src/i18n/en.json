@@ -1,0 +1,95 @@
+{
+  "home": {
+    "search": "Where are you going?"
+  },
+  "plan": {
+    "from": {
+      "title": "Where are you starting?"
+    },
+    "to": {
+      "title": "Where do you want to go?"
+    },
+    "step": "Step {{n}} of {{total}}",
+    "recommended": "Recommended",
+    "fastest": "Fastest",
+    "total": "{{n}} min total",
+    "wait": "Wait {{n}} min",
+    "takeaway": "{{extra}} minutes longer, but {{saved}} minutes less waiting at a quiet stop.",
+    "moreDetails": "More details"
+  },
+  "common": {
+    "continue": "Continue",
+    "back": "Back",
+    "done": "Done",
+    "submit": "Submit",
+    "tryAgain": "Try again"
+  },
+  "risk": {
+    "low": "Low waiting risk",
+    "medium": "Some risk while waiting",
+    "high": "High waiting risk"
+  },
+  "stop": {
+    "busyLit": "Busy and well lit",
+    "quiet": "Quiet stop, long wait"
+  },
+  "eta": {
+    "arriving": "Arriving in {{low}}–{{high}} min",
+    "now": "Arriving now"
+  },
+  "route": {
+    "walk": "Walk to the stop: {{n}} min",
+    "why": "Why this rating?",
+    "safeSpots": "Places to wait nearby"
+  },
+  "safewait": {
+    "cta": "Tell me when to leave",
+    "set": "You're all set",
+    "toast": "Bus {{n}} is about {{m}} min away. It's a {{w}} min walk.",
+    "title": "Leave now",
+    "sooner": "Bus is arriving sooner. Leave now.",
+    "ok": "OK",
+    "remind": "Remind me in 1 min",
+    "cancel": "Cancel alert"
+  },
+  "share": {
+    "cta": "Share my trip",
+    "explain": "Your contact sees where the bus is until your trip ends.",
+    "send": "Send link",
+    "copy": "Copy link",
+    "stop": "Stop sharing"
+  },
+  "alert": {
+    "skip": "This bus may not stop here",
+    "ghost": "This bus has not started",
+    "none": "No problems right now. All buses are running."
+  },
+  "report": {
+    "title": "Tell us about this stop",
+    "q1": "Which stop is this about?",
+    "q2": "What happened?",
+    "opt": {
+      "wait": "Long wait",
+      "light": "Dark or poorly lit",
+      "skip": "Bus didn't stop or didn't come",
+      "crowd": "Too crowded",
+      "uncomfortable": "I felt uncomfortable",
+      "other": "Something else"
+    },
+    "q3": "Want to add more? (optional)",
+    "noPii": "Please don't include names or phone numbers.",
+    "thanks": "Thank you. Your report is anonymous and helps fix this stop.",
+    "limit": "You've sent several reports. Please try again in an hour."
+  },
+  "trip": {
+    "onWay": "Bus {{n}} is on the way",
+    "ends": "This link stops working when the trip ends.",
+    "expired": "This link is no longer active."
+  },
+  "offline": {
+    "banner": "No internet. Showing the last bus positions."
+  },
+  "badge": {
+    "simulated": "Simulated data"
+  }
+}
