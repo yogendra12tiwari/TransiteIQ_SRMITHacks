@@ -7,6 +7,8 @@ import { AlertsPage } from "./pages/Alerts";
 import { PlanPage } from "./pages/Plan";
 import { RouteDetailPage } from "./pages/RouteDetail";
 import { TripSharePage } from "./pages/TripShare";
+import { ReportPage } from "./pages/Report";
+import { DashboardPage } from "./pages/Dashboard";
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -46,26 +48,6 @@ function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ReportPage() {
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Anonymous Safety Feedback</h1>
-      <p className="text-slate-300">Submit anonymous reports without personal tracking.</p>
-    </div>
-  );
-}
-
-function DashboardPage() {
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Authority Dashboard</h1>
-      <p className="text-slate-300">
-        Real-time service reliability, stop risk ranking, and human review queue.
-      </p>
-    </div>
-  );
-}
-
 export function AppRoutes() {
   return (
     <Routes>
@@ -75,7 +57,14 @@ export function AppRoutes() {
       <Route path="/alerts" element={<AlertsPage />} />
       <Route path="/report" element={<ReportPage />} />
       <Route path="/trip/:token" element={<TripSharePage />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
+      <Route
+        path="/dashboard"
+        element={
+          <RequireOperator>
+            <DashboardPage />
+          </RequireOperator>
+        }
+      />
       <Route
         path="/demo"
         element={
