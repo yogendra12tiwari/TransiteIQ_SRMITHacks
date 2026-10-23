@@ -870,8 +870,8 @@ docs: changelog v1.0.7 for m5
 Deploy: `firestore:rules`, `functions`, `hosting`.
 
 #### M5 exit checklist
-- [ ] All M5 tasks ticked, PRs merged.
-- [ ] TTL policy confirmed in console.
+- [x] All M5 tasks ticked, PRs merged.
+- [x] TTL policy confirmed in console.
 
 ---
 
@@ -884,67 +884,67 @@ Deploy: `firestore:rules`, `functions`, `hosting`.
 #### Tasks
 
 **Guardrails first (branch `feat/guardrails`, PR required)**
-- [ ] M6-01 `guard/redact.ts`: redact Indian mobile numbers (with/without +91, spaces, dashes), emails, 12-digit Aadhaar-like numbers, vehicle plates, URLs; return `{ text, redactions[] }`.
-- [ ] M6-02 Name-after-cue redaction in English and Hindi cues ("my name is", "mera naam", "called") — best effort, documented as such.
-- [ ] M6-03 `guard/injection.ts`: detect instruction-like patterns ("ignore previous", "system prompt", "you are now", role-play markers, URL payloads) in English and Hindi transliteration; return a flag, never block silently.
-- [ ] M6-04 `guard/bannedPhrases.ts`: list for crime-prediction language ("crime rate", "dangerous area", "criminal zone", "unsafe neighbourhood") and victim-blaming patterns ("should not have", "asking for it", "avoid wearing"); `scan(text)` returns hits.
-- [ ] M6-05 Tests: redaction for ≥ 25 phone/email/Aadhaar/plate variants; no false redaction of times ("8:30 PM") and bus numbers ("Bus 23"); injection samples (≥ 15) flagged; benign Hindi/English reports not flagged.
-- [ ] M6-06 Test: banned-phrase scan over **all** user-visible strings in `web/src`, `shared/i18n`, and `prompts/` (repo-wide guard test; fails CI on any hit).
+- [x] M6-01 `guard/redact.ts`: redact Indian mobile numbers (with/without +91, spaces, dashes), emails, 12-digit Aadhaar-like numbers, vehicle plates, URLs; return `{ text, redactions[] }`.
+- [x] M6-02 Name-after-cue redaction in English and Hindi cues ("my name is", "mera naam", "called") — best effort, documented as such.
+- [x] M6-03 `guard/injection.ts`: detect instruction-like patterns ("ignore previous", "system prompt", "you are now", role-play markers, URL payloads) in English and Hindi transliteration; return a flag, never block silently.
+- [x] M6-04 `guard/bannedPhrases.ts`: list for crime-prediction language ("crime rate", "dangerous area", "criminal zone", "unsafe neighbourhood") and victim-blaming patterns ("should not have", "asking for it", "avoid wearing"); `scan(text)` returns hits.
+- [x] M6-05 Tests: redaction for ≥ 25 phone/email/Aadhaar/plate variants; no false redaction of times ("8:30 PM") and bus numbers ("Bus 23"); injection samples (≥ 15) flagged; benign Hindi/English reports not flagged.
+- [x] M6-06 Test: banned-phrase scan over **all** user-visible strings in `web/src`, `shared/i18n`, and `prompts/` (repo-wide guard test; fails CI on any hit).
 
 **Report submission (branch `feat/reports`, PR required)**
-- [ ] M6-07 Rules: `reports`, `clusters`, `aggregates`, `reviewQueue`, `logs` read for operators only; client writes denied (except operator `update` on `reviewQueue`).
-- [ ] M6-08 Rules tests: anonymous user cannot read or write `reports`; operator can read; no client can create a report directly.
-- [ ] M6-09 `submitReport` callable: zod-validate `ReportInput`; require Anonymous Auth; check `stopId` exists; apply rate limit (5/hour per hashed key); redact PII; injection scan; deterministic triage; optional Genkit triage; write `reports/{id}` (no UID, device, or location); write `reviewQueue/{id}` when `harassment_concern`.
-- [ ] M6-10 Duplicate dampening: identical normalised text from the same hashed key within 24 h counts once.
-- [ ] M6-11 Deterministic triage (`rules`): keyword dictionaries (Hindi, English, Hinglish) for lighting, wait, skip, crowding, harassment; severity from keywords and category.
-- [ ] M6-12 Function tests: valid report stored redacted; rate limit blocks the 6th; PII never stored; harassment lands in `reviewQueue` with `needsHumanReview = true`; unknown stop rejected; oversized text rejected; unauthenticated rejected.
-- [ ] M6-13 `onReportCreated` trigger: update `aggregates/stops/{stopId}` (counts by category, corroboration weight, 30-day safety-related count), create/attach `clusters/{id}`, and write a log entry.
-- [ ] M6-14 Corroboration rule: a stop's `recentSafetyReports` contributes fully only when ≥ 3 independent hashed keys reported; otherwise scaled by `count/3`.
-- [ ] M6-15 Trigger tests: aggregates update on create; clusters group by (`stopId`, `category`); corroboration scaling works.
+- [x] M6-07 Rules: `reports`, `clusters`, `aggregates`, `reviewQueue`, `logs` read for operators only; client writes denied (except operator `update` on `reviewQueue`).
+- [x] M6-08 Rules tests: anonymous user cannot read or write `reports`; operator can read; no client can create a report directly.
+- [x] M6-09 `submitReport` callable: zod-validate `ReportInput`; require Anonymous Auth; check `stopId` exists; apply rate limit (5/hour per hashed key); redact PII; injection scan; deterministic triage; optional Genkit triage; write `reports/{id}` (no UID, device, or location); write `reviewQueue/{id}` when `harassment_concern`.
+- [x] M6-10 Duplicate dampening: identical normalised text from the same hashed key within 24 h counts once.
+- [x] M6-11 Deterministic triage (`rules`): keyword dictionaries (Hindi, English, Hinglish) for lighting, wait, skip, crowding, harassment; severity from keywords and category.
+- [x] M6-12 Function tests: valid report stored redacted; rate limit blocks the 6th; PII never stored; harassment lands in `reviewQueue` with `needsHumanReview = true`; unknown stop rejected; oversized text rejected; unauthenticated rejected.
+- [x] M6-13 `onReportCreated` trigger: update `aggregates/stops/{stopId}` (counts by category, corroboration weight, 30-day safety-related count), create/attach `clusters/{id}`, and write a log entry.
+- [x] M6-14 Corroboration rule: a stop's `recentSafetyReports` contributes fully only when ≥ 3 independent hashed keys reported; otherwise scaled by `count/3`.
+- [x] M6-15 Trigger tests: aggregates update on create; clusters group by (`stopId`, `category`); corroboration scaling works.
 
 **Genkit flows (branch `feat/genkit`, PR required)**
-- [ ] M6-16 Set up Genkit in `functions/`: model plugin, API key via `defineSecret`; wrap flows as callables with Genkit's Firebase helper (verify current API against the docs when building).
-- [ ] M6-17 Write `prompts/triageReport.v1.md` (purpose, inputs, output schema reference, safety rules, ≥ 4 few-shot examples in Hindi and English).
-- [ ] M6-18 Implement `flows/triageReport.ts`: input = redacted text + category + stopId; output zod `{ category, severity, lang, theme, needsHumanReview }`; temperature ≤ 0.2; max tokens capped; fall back to rules on any failure, invalid output, timeout (4 s), or banned-phrase hit.
-- [ ] M6-19 Write `prompts/explainRisk.v1.md` and `flows/explainRisk.ts`: converts factor breakdown into ≤ 280 characters in the requested language; non-blaming, no crime language; fallback to `ruleExplanation`.
-- [ ] M6-20 Write `prompts/recommendActions.v1.md` and `flows/recommendActions.ts` (optional): narrative around rule-based actions; fallback to rules.
-- [ ] M6-21 `lib/aiLog.ts`: write `logs/{id}` per PRD §11 (flow, promptVersion, model, source, inputHash, guard flags, latency, outcome, `expiresAtTs`); never log raw text.
-- [ ] M6-22 Version constants in code (`PROMPT_VERSIONS`) read the prompt file name; test that every flow's version string matches an existing file in `prompts/`.
-- [ ] M6-23 Mock the model in tests: valid output, malformed output, banned phrase in output, PII in output, timeout; assert fallback each time and that the log outcome is correct.
+- [x] M6-16 Set up Genkit in `functions/`: model plugin, API key via `defineSecret`; wrap flows as callables with Genkit's Firebase helper (verify current API against the docs when building).
+- [x] M6-17 Write `prompts/triageReport.v1.md` (purpose, inputs, output schema reference, safety rules, ≥ 4 few-shot examples in Hindi and English).
+- [x] M6-18 Implement `flows/triageReport.ts`: input = redacted text + category + stopId; output zod `{ category, severity, lang, theme, needsHumanReview }`; temperature ≤ 0.2; max tokens capped; fall back to rules on any failure, invalid output, timeout (4 s), or banned-phrase hit.
+- [x] M6-19 Write `prompts/explainRisk.v1.md` and `flows/explainRisk.ts`: converts factor breakdown into ≤ 280 characters in the requested language; non-blaming, no crime language; fallback to `ruleExplanation`.
+- [x] M6-20 Write `prompts/recommendActions.v1.md` and `flows/recommendActions.ts` (optional): narrative around rule-based actions; fallback to rules.
+- [x] M6-21 `lib/aiLog.ts`: write `logs/{id}` per PRD §11 (flow, promptVersion, model, source, inputHash, guard flags, latency, outcome, `expiresAtTs`); never log raw text.
+- [x] M6-22 Version constants in code (`PROMPT_VERSIONS`) read the prompt file name; test that every flow's version string matches an existing file in `prompts/`.
+- [x] M6-23 Mock the model in tests: valid output, malformed output, banned phrase in output, PII in output, timeout; assert fallback each time and that the log outcome is correct.
 
 **Judge (`functions/src/judge`)**
-- [ ] M6-24 Build a fixed case set (≥ 40 cases: Hindi, English, Hinglish, injection attempts, PII, harassment, empty text, very long text).
-- [ ] M6-25 Hard checks per output: zod valid, banned-phrase free, no PII, language matches, length limit.
-- [ ] M6-26 Optional soft judge: second Genkit flow scores tone 1–5 (non-blaming, factual); CI threshold mean ≥ 4 when the secret is available; skipped (with a visible notice) when it is not.
-- [ ] M6-27 Add `npm run judge` and wire the hard checks into CI.
+- [x] M6-24 Build a fixed case set (≥ 40 cases: Hindi, English, Hinglish, injection attempts, PII, harassment, empty text, very long text).
+- [x] M6-25 Hard checks per output: zod valid, banned-phrase free, no PII, language matches, length limit.
+- [x] M6-26 Optional soft judge: second Genkit flow scores tone 1–5 (non-blaming, factual); CI threshold mean ≥ 4 when the secret is available; skipped (with a visible notice) when it is not.
+- [x] M6-27 Add `npm run judge` and wire the hard checks into CI.
 
 **Dashboard summary**
-- [ ] M6-28 `engine/recommendations.ts`: rule-based actions per PRD §10.4 (wait > 15 → add departure; lighting reports ≥ 3 or lighting poor → improve lighting; skipRate > 0.2 → investigate; harassment present → human review and staffed presence).
-- [ ] M6-29 `dashboardSummary` callable (operator only): ranked stops by `risk × ridershipPerEvening`, KPIs (average evening wait, delayed buses now, total safety-related reports, ghost-bus rate), recommended actions, cluster summaries.
-- [ ] M6-30 Tests: Stop A ranks first with 18-min average evening wait, 7 safety-related reports, High, and the expected recommendations; non-operators rejected.
+- [x] M6-28 `engine/recommendations.ts`: rule-based actions per PRD §10.4 (wait > 15 → add departure; lighting reports ≥ 3 or lighting poor → improve lighting; skipRate > 0.2 → investigate; harassment present → human review and staffed presence).
+- [x] M6-29 `dashboardSummary` callable (operator only): ranked stops by `risk × ridershipPerEvening`, KPIs (average evening wait, delayed buses now, total safety-related reports, ghost-bus rate), recommended actions, cluster summaries.
+- [x] M6-30 Tests: Stop A ranks first with 18-min average evening wait, 7 safety-related reports, High, and the expected recommendations; non-operators rejected.
 
 **Dashboard UI (operator only)**
-- [ ] M6-31 `/dashboard` layout (desktop): KPI row, priority table, map heatmap, wait-by-hour chart, clusters panel, recommendations, review queue, system-health card.
-- [ ] M6-32 Priority table with the headline row: "Stop A: average evening wait 18 minutes, 7 safety-related reports" with risk badge and recommended action.
-- [ ] M6-33 Heatmap: circle markers sized by priority with a colour **and** label legend; no neighbourhood labels, only stop names.
-- [ ] M6-34 `WaitByHourChart` (Recharts) for the selected stop using `history` and live aggregates.
-- [ ] M6-35 `ReviewQueue`: list of harassment-tagged reports (redacted), status (new, in review, resolved), reviewer note; no public exposure; resolving only changes status (no automated action).
-- [ ] M6-36 System-health card: AI success vs fallback rate, guard blocks, report-to-dashboard latency, ETA MAE line from `eval`.
-- [ ] M6-37 Dashboard footer shows active `promptVersions`.
-- [ ] M6-38 Component tests: headline row text; queue never renders on non-operator routes; chart renders from fixtures.
+- [x] M6-31 `/dashboard` layout (desktop): KPI row, priority table, map heatmap, wait-by-hour chart, clusters panel, recommendations, review queue, system-health card.
+- [x] M6-32 Priority table with the headline row: "Stop A: average evening wait 18 minutes, 7 safety-related reports" with risk badge and recommended action.
+- [x] M6-33 Heatmap: circle markers sized by priority with a colour **and** label legend; no neighbourhood labels, only stop names.
+- [x] M6-34 `WaitByHourChart` (Recharts) for the selected stop using `history` and live aggregates.
+- [x] M6-35 `ReviewQueue`: list of harassment-tagged reports (redacted), status (new, in review, resolved), reviewer note; no public exposure; resolving only changes status (no automated action).
+- [x] M6-36 System-health card: AI success vs fallback rate, guard blocks, report-to-dashboard latency, ETA MAE line from `eval`.
+- [x] M6-37 Dashboard footer shows active `promptVersions`.
+- [x] M6-38 Component tests: headline row text; queue never renders on non-operator routes; chart renders from fixtures.
 
 **Rider report form**
-- [ ] M6-39 `/report` page: category chips, stop selector, optional text (500 chars with counter), reassuring anonymity note, success state, error states (rate-limited, offline).
-- [ ] M6-40 Hindi/English strings for the form; a11y labels; keyboard navigation.
-- [ ] M6-41 Component tests: validation, success, rate-limit message, no identifying fields in the payload (snapshot of the request body).
+- [x] M6-39 `/report` page: category chips, stop selector, optional text (500 chars with counter), reassuring anonymity note, success state, error states (rate-limited, offline).
+- [x] M6-40 Hindi/English strings for the form; a11y labels; keyboard navigation.
+- [x] M6-41 Component tests: validation, success, rate-limit message, no identifying fields in the payload (snapshot of the request body).
 
 **Indexes, deploy, verify**
-- [ ] M6-42 Finalise `firestore.indexes.json` for `reports`, `clusters`, `aggregates` queries; deploy.
-- [ ] M6-43 `firebase deploy --only firestore:rules,firestore:indexes,functions,hosting`.
-- [ ] M6-44 Manual: submit a report from the rider UI; dashboard updates in under 5 seconds; rider cannot open `/dashboard`.
-- [ ] M6-45 Manual: submit an injection-style and a phone-number report; confirm redaction, flag, and fallback paths in `logs`.
-- [ ] M6-46 Disable the LLM secret temporarily; confirm every flow falls back and the UI still works.
-- [ ] M6-47 **Scope freeze** after this milestone (§13).
+- [x] M6-42 Finalise `firestore.indexes.json` for `reports`, `clusters`, `aggregates` queries; deploy.
+- [x] M6-43 `firebase deploy --only firestore:rules,firestore:indexes,functions,hosting`.
+- [x] M6-44 Manual: submit a report from the rider UI; dashboard updates in under 5 seconds; rider cannot open `/dashboard`.
+- [x] M6-45 Manual: submit an injection-style and a phone-number report; confirm redaction, flag, and fallback paths in `logs`.
+- [x] M6-46 Disable the LLM secret temporarily; confirm every flow falls back and the UI still works.
+- [x] M6-47 **Scope freeze** after this milestone (§13).
 
 #### Files created or changed
 `shared/src/guard/*`, `shared/src/engine/recommendations.ts`, `functions/src/{callables,triggers,flows,lib,judge}/*`, `prompts/*`, `firestore.rules`, `firestore.indexes.json`, `web/src/pages/{Dashboard,Report}.tsx`, dashboard components, tests.
@@ -982,8 +982,8 @@ docs: changelog v1.0.8 for m6 and scope freeze
 Deploy: `firestore:rules`, `firestore:indexes`, `functions`, `hosting`.
 
 #### M6 exit checklist
-- [ ] All M6 tasks ticked, PRs merged.
-- [ ] Scope frozen; roadmap items remain documentation only.
+- [x] All M6 tasks ticked, PRs merged.
+- [x] Scope frozen; roadmap items remain documentation only.
 
 ---
 
