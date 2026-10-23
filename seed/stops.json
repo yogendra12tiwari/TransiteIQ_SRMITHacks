@@ -90,10 +90,12 @@
   {
     "id": "stop_A",
     "name": "Stop A (Example)",
+    "nameHi": "स्टॉप ए (लोहिया पथ)",
     "lat": 26.8528,
     "lng": 80.9655,
     "activity": 0.2,
     "lighting": "poor",
+    "cctv": false,
     "ridershipPerEvening": 400,
     "skipRate": 0.25,
     "safeSpotIds": ["spot_A_1", "spot_A_2", "spot_A_3"]
@@ -101,10 +103,12 @@
   {
     "id": "stop_B",
     "name": "Stop B (Market Junction)",
+    "nameHi": "स्टॉप बी (मार्केट जंक्शन)",
     "lat": 26.8545,
     "lng": 80.9685,
     "activity": 0.8,
     "lighting": "good",
+    "cctv": true,
     "ridershipPerEvening": 420,
     "skipRate": 0.05,
     "safeSpotIds": ["spot_B_1", "spot_B_2", "spot_B_3"]

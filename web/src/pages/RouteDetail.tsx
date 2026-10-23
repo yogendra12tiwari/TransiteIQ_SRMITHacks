@@ -7,6 +7,7 @@ import {
   type SafeWaitAlertStatus,
   formatEtaRange,
   waitRisk,
+  computeRouteScore,
 } from "@transitiq/shared";
 import { useNetwork } from "../hooks/useNetwork";
 import { useLiveState } from "../hooks/useLiveState";
@@ -84,6 +85,12 @@ export function RouteDetailPage() {
     };
   }, [buses, currentRoute, currentStop]);
 
+  // Route reliability score (F19 / P2-09)
+  const routeScore = useMemo(() => {
+    if (!currentRoute) return null;
+    return computeRouteScore({ route: currentRoute });
+  }, [currentRoute]);
+
   // Check if bus is likely skip
   const isLikelySkip = useMemo(() => {
     return alerts.some((a) => a.type === "LIKELY_SKIP" && a.affectedStopIds.includes(selectedStopId));
@@ -155,6 +162,13 @@ export function RouteDetailPage() {
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full" style={{ backgroundColor: currentRoute.color }} />
               <h1 className="text-xl font-bold text-white">{currentRoute.name}</h1>
+              {routeScore && (
+                <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  {lang === "hi"
+                    ? `विश्वसनीयता: ${routeScore.overall}/100`
+                    : `Reliability: ${routeScore.overall}/100`}
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-400">
               {currentRoute.stopIds.length} stops • Evening headway: {currentRoute.headwayMin.evening} min
@@ -285,6 +299,86 @@ export function RouteDetailPage() {
               </span>
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Trip Progress Tracker (F14 / P2-06) */}
+      <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60 shadow-lg space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold text-white flex items-center gap-2">
+            <span>⏱️</span>
+            <span>{lang === "hi" ? "यात्रा प्रगति ट्रैकर" : "Trip Progress & Ordered Stops"}</span>
+          </h2>
+          <span className="text-xs text-slate-400">
+            {currentRoute.stopIds.length} {lang === "hi" ? "स्टॉप" : "stops"}
+          </span>
+        </div>
+
+        <div className="space-y-2">
+          {currentRoute.stopIds.map((stopId, idx) => {
+            const st = stops.find((s) => s.id === stopId);
+            const isBoarding = stopId === selectedStopId;
+            const selectedIdx = currentRoute.stopIds.indexOf(selectedStopId);
+            const isPassed = selectedIdx !== -1 && idx < selectedIdx;
+            const stopEta = isPassed ? null : Math.max(2, (idx - selectedIdx) * 4);
+
+            return (
+              <div
+                key={stopId}
+                className={`p-3 rounded-xl flex items-center justify-between transition-colors border ${
+                  isBoarding
+                    ? "bg-slate-700/70 border-emerald-500/60"
+                    : isPassed
+                      ? "bg-slate-900/40 border-slate-800/60 opacity-60"
+                      : "bg-slate-900/60 border-slate-700/50"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      isPassed
+                        ? "bg-slate-800 text-slate-400 border border-slate-700"
+                        : isBoarding
+                          ? "bg-emerald-500 text-slate-950 font-black ring-2 ring-emerald-400/40"
+                          : "bg-slate-800 text-slate-200 border border-slate-600"
+                    }`}
+                  >
+                    {isPassed ? "✔" : idx + 1}
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-white flex items-center gap-1.5">
+                      <span>{st?.name || stopId}</span>
+                      {st?.cctv && (
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300">
+                          CCTV
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-slate-400">
+                      {isBoarding
+                        ? lang === "hi"
+                          ? "चयनित बोर्डिंग स्टॉप"
+                          : "Selected boarding stop"
+                        : isPassed
+                          ? lang === "hi"
+                            ? "स्टॉप पार हो चुका है"
+                            : "Stop completed"
+                          : lang === "hi"
+                            ? `आगमन: ~${stopEta} मिनट में`
+                            : `Arriving in ~${stopEta} min`}
+                    </div>
+                  </div>
+                </div>
+
+                <Link
+                  to={`/stop/${stopId}`}
+                  className="text-xs text-blue-400 hover:text-blue-300 font-medium"
+                >
+                  {lang === "hi" ? "समय →" : "Times →"}
+                </Link>
+              </div>
+            );
+          })}
         </div>
       </div>
 

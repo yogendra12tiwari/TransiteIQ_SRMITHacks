@@ -1,5 +1,11 @@
 import type { Route, Stop } from "../schemas/network.js";
-import { type Bus, type Alert, type AlertType, type AlertSeverity } from "../schemas/live.js";
+import {
+  type Bus,
+  type Alert,
+  type AlertType,
+  type AlertSeverity,
+  type IncidentStatus,
+} from "../schemas/live.js";
 import { distanceAlongRoute, type LatLngTuple } from "./geo.js";
 import { enAlerts, hiAlerts } from "../i18n/index.js";
 
@@ -44,19 +50,54 @@ export function buildAlert(params: {
   id: string;
   type: AlertType;
   severity: AlertSeverity;
+  source?: "system" | "operator";
+  status?: IncidentStatus;
   message: string;
-  messageHi: string;
+  messageHi?: string;
+  delayReason?: string;
   affectedStopIds: string[];
+  routeId?: string;
   createdAt?: number;
 }): Alert {
   return {
     id: params.id,
     type: params.type,
     severity: params.severity,
+    source: params.source ?? "system",
+    status: params.status ?? "NEW",
+    message: params.message,
+    messageHi: params.messageHi,
+    delayReason: params.delayReason,
+    affectedStopIds: params.affectedStopIds,
+    routeId: params.routeId,
+    createdAt: params.createdAt ?? Date.now(),
+  };
+}
+
+/**
+ * Operator alert factory for service disruption notices (M6b P2-20).
+ */
+export function buildOperatorAlert(params: {
+  id?: string;
+  type: AlertType;
+  severity: AlertSeverity;
+  message: string;
+  messageHi?: string;
+  affectedStopIds: string[];
+  routeId?: string;
+  nowMs?: number;
+}): Alert {
+  return {
+    id: params.id ?? `alert_op_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    type: params.type,
+    severity: params.severity,
+    source: "operator",
+    status: "NEW",
     message: params.message,
     messageHi: params.messageHi,
     affectedStopIds: params.affectedStopIds,
-    createdAt: params.createdAt ?? Date.now(),
+    routeId: params.routeId,
+    createdAt: params.nowMs ?? Date.now(),
   };
 }
 
@@ -227,4 +268,29 @@ export function syncAlertLifecycle(currentAlerts: Alert[], detectedAlerts: Alert
   }
 
   return result;
+}
+
+/**
+ * Detects stale GPS telemetry / gap > 3 minutes (M6b P2-21).
+ */
+export function detectGpsGap(
+  bus: Pick<Bus, "id" | "routeId" | "lastPingMs">,
+  route: Route,
+  thresholdMs = 180_000,
+  nowMs = Date.now(),
+): Alert | null {
+  if (!bus.lastPingMs) return null;
+  const gapMs = nowMs - bus.lastPingMs;
+  if (gapMs < thresholdMs) return null;
+
+  return buildAlert({
+    id: `alert_gps_gap_${bus.id}`,
+    type: "GPS_GAP",
+    severity: "medium",
+    message: `Bus ${bus.id} (${route.name}): GPS telemetry interrupted (>3 min gap).`,
+    messageHi: `बस ${bus.id} (${route.name}): जीपीएस सिग्नल में 3 मिनट से अधिक का अंतराल है।`,
+    affectedStopIds: route.stopIds,
+    routeId: route.id,
+    createdAt: nowMs,
+  });
 }

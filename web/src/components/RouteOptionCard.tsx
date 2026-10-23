@@ -81,11 +81,38 @@ export function RouteOptionCard({
                 : `Wait ${option.waitMin} min · ${isBusyLit ? "busy, lit" : "quiet stop"}`}
             </p>
 
-            <div className="pt-1">
+            <div className="pt-1 flex items-center gap-2 flex-wrap">
               <RiskBadge
                 label={isLowRisk ? "Low" : waitRiskScore < 0.7 ? "Medium" : "High"}
                 score={waitRiskScore}
               />
+
+              {/* Fare estimate (F3 / P2-07) */}
+              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-[#111827] border border-slate-200">
+                ₹{option.fareInr ?? (option.boardingStopId === "stop_A" ? 22 : 24)}
+              </span>
+
+              {/* Crowding prediction (F20 / P2-10) */}
+              <span className="text-xs font-medium px-2 py-0.5 rounded bg-slate-100 text-[#4B5563]">
+                {currentLang === "hi"
+                  ? option.crowding === "high"
+                    ? "काफी भीड़"
+                    : option.crowding === "medium"
+                      ? "खड़े रहने की संभावना"
+                      : "सीट उपलब्ध"
+                  : option.crowding === "high"
+                    ? "Very crowded"
+                    : option.crowding === "medium"
+                      ? "Standing likely"
+                      : "Seats likely"}
+              </span>
+
+              {/* Delay risk prediction (F17 / P2-08) */}
+              {option.delayRisk === "delayed" && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-300">
+                  {currentLang === "hi" ? "देरी संभव" : "May be late"}
+                </span>
+              )}
             </div>
           </div>
         </div>

@@ -16,6 +16,7 @@ export const WaitRisk = z.object({
   label: RiskLabel,
   factors: RiskFactors,
   explanation: z.string().min(1),
+  cctv: z.boolean().optional(),
 });
 export type WaitRisk = z.infer<typeof WaitRisk>;
 
@@ -41,5 +42,8 @@ export const RouteOption = z.object({
   riskLabel: RiskLabel,
   polyline: z.array(z.tuple([z.number(), z.number()])).min(2),
   cost: z.number(),
+  fareInr: z.number().optional(),
+  crowding: z.enum(["low", "medium", "high"]).optional(),
+  delayRisk: z.enum(["on_time", "delayed"]).optional(),
 });
 export type RouteOption = z.infer<typeof RouteOption>;

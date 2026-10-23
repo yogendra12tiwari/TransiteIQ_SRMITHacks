@@ -1,7 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Stop, Route, SafeSpot, Report, isSafetyRelated, haversineM } from "../shared/src/index.js";
+import {
+  Stop,
+  Route,
+  SafeSpot,
+  HelpPoint,
+  Report,
+  isSafetyRelated,
+  haversineM,
+} from "../shared/src/index.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -102,6 +110,15 @@ function verifySeed(): void {
     throw new Error("incidents.json must contain at least 3 scripted events");
   }
   console.log(`✓ incidents.json: ${incidents.events.length} scripted incidents validated`);
+
+  // 7. Verify helpPoints.json (M6b P2-23)
+  const helpPointsPath = path.resolve(__dirname, "../seed/helpPoints.json");
+  const rawHelpPoints = JSON.parse(fs.readFileSync(helpPointsPath, "utf-8"));
+  const helpPoints = rawHelpPoints.map((h: unknown) => HelpPoint.parse(h));
+  if (helpPoints.length < 5) {
+    throw new Error(`Expected >= 5 help points, found ${helpPoints.length}`);
+  }
+  console.log(`✓ helpPoints.json: ${helpPoints.length} emergency help points validated`);
 
   console.log("=== All seed files verified successfully ===");
 }

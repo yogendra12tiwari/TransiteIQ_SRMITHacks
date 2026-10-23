@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { type User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
+import {
+  type User,
+  onAuthStateChanged,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 import { auth } from "../firebase";
 
 export interface OperatorState {
@@ -7,6 +14,7 @@ export interface OperatorState {
   isOperator: boolean;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInAsTestOperator?: () => Promise<void>;
   signOutOperator: () => Promise<void>;
 }
 
@@ -52,6 +60,20 @@ export function useOperator(): OperatorState {
     }
   };
 
+  const signInAsTestOperator = async () => {
+    setLoading(true);
+    try {
+      const cred = await signInWithEmailAndPassword(auth, "operator@transitiq.local", "password123");
+      const tokenResult = await cred.user.getIdTokenResult(true);
+      setIsOperator(tokenResult.claims.role === "operator");
+    } catch (err) {
+      console.error("Test operator sign-in error:", err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signOutOperator = async () => {
     setLoading(true);
     try {
@@ -67,6 +89,7 @@ export function useOperator(): OperatorState {
     isOperator,
     loading,
     signInWithGoogle,
+    signInAsTestOperator,
     signOutOperator,
   };
 }

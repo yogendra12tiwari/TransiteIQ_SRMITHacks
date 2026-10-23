@@ -661,23 +661,23 @@ UI work is paired with the main build milestones. Task IDs: `U<n>-<nn>`. Each ta
 
 **Objective:** tokens and reusable components so every later screen is consistent and simple.
 
-- [x] U0-01 Add Tailwind theme extension with the tokens in §2.1 (colours, spacing, radius, type scale).
-- [x] U0-02 Run a contrast check for every text/background pair; record results in `docs/ui-contrast.md`; adjust tokens that fail.
-- [x] U0-03 Add the system font stack and lazy-load Noto Sans Devanagari when Hindi is active.
-- [x] U0-04 Configure i18next with `en.json` and `hi.json`; add the key-parity test.
-- [x] U0-05 Build `Button` (primary/secondary/text, loading, disabled) with a dev-only warning if two primaries render on one screen.
-- [x] U0-06 Build `Card`, `OptionRow`, `Disclosure`, `Banner`, `Badge`.
-- [x] U0-07 Build `Step` and `StickyAction` (safe-area aware).
-- [x] U0-08 Build `Sheet` (non-modal bottom sheet with snap points and drag).
-- [x] U0-09 Build `Toast` (status/alert variants, persist option).
-- [x] U0-10 Build `TextField` and `SearchField` (visible label, 16 px text, error linking).
-- [x] U0-11 Build `EmptyState`, `ErrorState`, `Skeleton`.
-- [x] U0-12 Build `RiskBadge` (icon + words + colour) and `WhyList`.
-- [x] U0-13 Build `LanguageToggle`, `SimulatedDataBadge`, `BottomTabs`.
-- [x] U0-14 Build `AppShell`: phone frame on ≥ 1024 px, full-width below; top bar with badge and language toggle.
-- [x] U0-15 Add a hidden `/ui-kit` route (dev only) showing every component in all states, in both languages.
-- [x] U0-16 Tests: each primitive renders, is keyboard operable, has no axe violations; `Button` warns on two primaries.
-- [x] U0-17 Commit as small steps (`feat: add button`, `feat: add sheet`, …), push, deploy hosting.
+- [ ] U0-01 Add Tailwind theme extension with the tokens in §2.1 (colours, spacing, radius, type scale).
+- [ ] U0-02 Run a contrast check for every text/background pair; record results in `docs/ui-contrast.md`; adjust tokens that fail.
+- [ ] U0-03 Add the system font stack and lazy-load Noto Sans Devanagari when Hindi is active.
+- [ ] U0-04 Configure i18next with `en.json` and `hi.json`; add the key-parity test.
+- [ ] U0-05 Build `Button` (primary/secondary/text, loading, disabled) with a dev-only warning if two primaries render on one screen.
+- [ ] U0-06 Build `Card`, `OptionRow`, `Disclosure`, `Banner`, `Badge`.
+- [ ] U0-07 Build `Step` and `StickyAction` (safe-area aware).
+- [ ] U0-08 Build `Sheet` (non-modal bottom sheet with snap points and drag).
+- [ ] U0-09 Build `Toast` (status/alert variants, persist option).
+- [ ] U0-10 Build `TextField` and `SearchField` (visible label, 16 px text, error linking).
+- [ ] U0-11 Build `EmptyState`, `ErrorState`, `Skeleton`.
+- [ ] U0-12 Build `RiskBadge` (icon + words + colour) and `WhyList`.
+- [ ] U0-13 Build `LanguageToggle`, `SimulatedDataBadge`, `BottomTabs`.
+- [ ] U0-14 Build `AppShell`: phone frame on ≥ 1024 px, full-width below; top bar with badge and language toggle.
+- [ ] U0-15 Add a hidden `/ui-kit` route (dev only) showing every component in all states, in both languages.
+- [ ] U0-16 Tests: each primitive renders, is keyboard operable, has no axe violations; `Button` warns on two primaries.
+- [ ] U0-17 Commit as small steps (`feat: add button`, `feat: add sheet`, …), push, deploy hosting.
 
 **Done when:** `/ui-kit` shows all primitives; axe reports no violations; contrast table passes; Hindi renders correctly.
 
@@ -685,15 +685,15 @@ UI work is paired with the main build milestones. Task IDs: `U<n>-<nn>`. Each ta
 
 ### U1 — Home with live map (pairs with M2)
 
-- [x] U1-01 Build `HomePage` with `MapView` behind a bottom `Sheet` containing the "Where are you going?" field.
-- [x] U1-02 Show only: map, search card, language toggle, simulated badge, three bottom tabs.
-- [x] U1-03 Bus markers (32 px) and stop markers (20 px) per §2.3; selected route emphasised, others dimmed.
-- [x] U1-04 Tap bus/stop → small `StopSheet`/`BusSheet` with next arrivals as plain text.
-- [x] U1-05 "List view" text link that shows buses and stops as text (map accessibility alternative).
-- [x] U1-06 Stale-feed banner after 8 s of no updates; offline banner.
-- [x] U1-07 Skeleton state while the first `sim/live` snapshot loads.
-- [x] U1-08 Tests: search card opens Plan step 1; bus tap shows sheet; stale banner appears; no horizontal scroll at 360 px.
-- [x] U1-09 Commit, push, deploy hosting.
+- [ ] U1-01 Build `HomePage` with `MapView` behind a bottom `Sheet` containing the "Where are you going?" field.
+- [ ] U1-02 Show only: map, search card, language toggle, simulated badge, three bottom tabs.
+- [ ] U1-03 Bus markers (32 px) and stop markers (20 px) per §2.3; selected route emphasised, others dimmed.
+- [ ] U1-04 Tap bus/stop → small `StopSheet`/`BusSheet` with next arrivals as plain text.
+- [ ] U1-05 "List view" text link that shows buses and stops as text (map accessibility alternative).
+- [ ] U1-06 Stale-feed banner after 8 s of no updates; offline banner.
+- [ ] U1-07 Skeleton state while the first `sim/live` snapshot loads.
+- [ ] U1-08 Tests: search card opens Plan step 1; bus tap shows sheet; stale banner appears; no horizontal scroll at 360 px.
+- [ ] U1-09 Commit, push, deploy hosting.
 
 **Done when:** on a 360 px screen the user sees buses moving and one obvious field; nothing else competes for attention.
 
@@ -701,18 +701,18 @@ UI work is paired with the main build milestones. Task IDs: `U<n>-<nn>`. Each ta
 
 ### U2 — Alerts, stop sheet, plan flow, compare card (pairs with M3–M4)
 
-- [x] U2-01 Build `EtaText` (range, "Arriving now", "may not stop here") in both languages.
-- [x] U2-02 Build `AlertCard` and the Alerts tab with empty/error states.
-- [x] U2-03 Build the single skip-alert banner on Home for followed stops.
-- [x] U2-04 Build Plan step 1 and step 2 using `Step`, `SearchField`, `OptionRow`; keep choices when going back.
-- [x] U2-05 Build `RouteOptionCard` and `TakeawayLine`; pre-select the recommended option.
-- [x] U2-06 Build "More details" `Disclosure` with `WhyList`, walking minutes, and the "Faster ↔ Less waiting alone" slider.
-- [x] U2-07 "Show on map" link that lifts the map with both routes drawn (colour + line style: solid vs dashed so it is not colour-only).
-- [x] U2-08 Handle the "Fastest is also the safest" case and the "no direct route" empty state.
-- [x] U2-09 Sticky **Continue** button; disabled until an option is selected.
-- [x] U2-10 Tests: takeaway text matches golden numbers (4 and 10); slider re-ranks; card selection by keyboard; back keeps state; Hindi text fits without truncation.
-- [x] U2-11 Visual check at 360, 390, 430, 768 px.
-- [x] U2-12 Commit, push, deploy hosting.
+- [ ] U2-01 Build `EtaText` (range, "Arriving now", "may not stop here") in both languages.
+- [ ] U2-02 Build `AlertCard` and the Alerts tab with empty/error states.
+- [ ] U2-03 Build the single skip-alert banner on Home for followed stops.
+- [ ] U2-04 Build Plan step 1 and step 2 using `Step`, `SearchField`, `OptionRow`; keep choices when going back.
+- [ ] U2-05 Build `RouteOptionCard` and `TakeawayLine`; pre-select the recommended option.
+- [ ] U2-06 Build "More details" `Disclosure` with `WhyList`, walking minutes, and the "Faster ↔ Less waiting alone" slider.
+- [ ] U2-07 "Show on map" link that lifts the map with both routes drawn (colour + line style: solid vs dashed so it is not colour-only).
+- [ ] U2-08 Handle the "Fastest is also the safest" case and the "no direct route" empty state.
+- [ ] U2-09 Sticky **Continue** button; disabled until an option is selected.
+- [ ] U2-10 Tests: takeaway text matches golden numbers (4 and 10); slider re-ranks; card selection by keyboard; back keeps state; Hindi text fits without truncation.
+- [ ] U2-11 Visual check at 360, 390, 430, 768 px.
+- [ ] U2-12 Commit, push, deploy hosting.
 
 **Done when:** the compare screen shows "32 min · wait 4 min · Low waiting risk" vs "28 min · wait 14 min · High waiting risk" with the takeaway, one primary button, and nothing else competing.
 

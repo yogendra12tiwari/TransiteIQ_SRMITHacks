@@ -1,0 +1,74 @@
+[
+  {
+    "id": "help_police_hazratganj",
+    "name": "Hazratganj Women Police Station",
+    "nameHi": "हज़रतगंज महिला थाना",
+    "kind": "police",
+    "lat": 26.853,
+    "lng": 80.946,
+    "phone": "0522-2238012"
+  },
+  {
+    "id": "help_police_gomtinagar",
+    "name": "Gomti Nagar Police Station",
+    "nameHi": "गोमती नगर पुलिस थाना",
+    "kind": "police",
+    "lat": 26.861,
+    "lng": 80.992,
+    "phone": "0522-2307550"
+  },
+  {
+    "id": "help_police_charbagh",
+    "name": "Charbagh Transit Police Booth",
+    "nameHi": "चारबाग ट्रांजिट पुलिस बूथ",
+    "kind": "police",
+    "lat": 26.832,
+    "lng": 80.9235,
+    "phone": "112"
+  },
+  {
+    "id": "help_hospital_lohia",
+    "name": "Dr. RML Institute of Medical Sciences",
+    "nameHi": "डॉ. राम मनोहर लोहिया अस्पताल",
+    "kind": "hospital",
+    "lat": 26.864,
+    "lng": 81.006,
+    "phone": "0522-6692000"
+  },
+  {
+    "id": "help_hospital_civil",
+    "name": "Shyama Prasad Mukherjee (Civil) Hospital",
+    "nameHi": "सिविल अस्पताल हज़रतगंज",
+    "kind": "hospital",
+    "lat": 26.8505,
+    "lng": 80.942,
+    "phone": "0522-2239014"
+  },
+  {
+    "id": "help_pharmacy_24h_lohia",
+    "name": "Apollo 24/7 Chemist (Lohia Stretch)",
+    "nameHi": "अपोलो 24/7 दवाखाना",
+    "kind": "pharmacy_24h",
+    "lat": 26.8522,
+    "lng": 80.9665,
+    "phone": "0522-4011223"
+  },
+  {
+    "id": "help_pharmacy_24h_hazratganj",
+    "name": "MedPlus 24-Hour Pharmacy",
+    "nameHi": "मेडप्लस 24-घंटे फार्मेसी",
+    "kind": "pharmacy_24h",
+    "lat": 26.854,
+    "lng": 80.949,
+    "phone": "0522-4100552"
+  },
+  {
+    "id": "help_desk_wpl1090",
+    "name": "Women Power Line (1090) Assistance Kiosk",
+    "nameHi": "महिला पावर लाइन (1090) सहायता केंद्र",
+    "kind": "helpdesk",
+    "lat": 26.8565,
+    "lng": 80.971,
+    "phone": "1090"
+  }
+]

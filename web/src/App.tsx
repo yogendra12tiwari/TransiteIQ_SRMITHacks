@@ -7,6 +7,9 @@ import { DemoPage } from "./pages/Demo";
 import { AlertsPage } from "./pages/Alerts";
 import { PlanPage } from "./pages/Plan";
 import { RouteDetailPage } from "./pages/RouteDetail";
+import { StopTimetablePage } from "./pages/StopTimetable";
+import { HelpPage } from "./pages/Help";
+import { DriverPage } from "./pages/Driver";
 import { TripSharePage } from "./pages/TripShare";
 import { ReportPage } from "./pages/Report";
 import { DashboardPage } from "./pages/Dashboard";
@@ -14,7 +17,10 @@ import { UiKitPage } from "./pages/UiKit";
 
 function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const isOperatorRoute = location.pathname.startsWith("/dashboard") || location.pathname.startsWith("/demo");
+  const isOperatorRoute =
+    location.pathname.startsWith("/dashboard") ||
+    location.pathname.startsWith("/demo") ||
+    location.pathname.startsWith("/driver");
 
   if (isOperatorRoute) {
     return (
@@ -34,6 +40,9 @@ function Layout({ children }: { children: React.ReactNode }) {
               <Link to="/dashboard" className="hover:text-white">
                 Dashboard
               </Link>
+              <Link to="/driver" className="hover:text-white">
+                Driver Panel
+              </Link>
               <Link to="/demo" className="hover:text-white">
                 Demo
               </Link>
@@ -48,9 +57,9 @@ function Layout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const isTripShare = location.pathname.startsWith("/trip");
+  const isStandalone = location.pathname.startsWith("/trip") || location.pathname.startsWith("/help");
 
-  return <AppShell showBottomTabs={!isTripShare}>{children}</AppShell>;
+  return <AppShell showBottomTabs={!isStandalone}>{children}</AppShell>;
 }
 
 export function AppRoutes() {
@@ -59,10 +68,20 @@ export function AppRoutes() {
       <Route path="/" element={<HomePage />} />
       <Route path="/plan" element={<PlanPage />} />
       <Route path="/route/:id" element={<RouteDetailPage />} />
+      <Route path="/stop/:id" element={<StopTimetablePage />} />
       <Route path="/alerts" element={<AlertsPage />} />
       <Route path="/report" element={<ReportPage />} />
+      <Route path="/help" element={<HelpPage />} />
       <Route path="/trip/:token" element={<TripSharePage />} />
       <Route path="/ui-kit" element={<UiKitPage />} />
+      <Route
+        path="/driver"
+        element={
+          <RequireOperator>
+            <DriverPage />
+          </RequireOperator>
+        }
+      />
       <Route
         path="/dashboard"
         element={

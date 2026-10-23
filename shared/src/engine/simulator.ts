@@ -4,6 +4,7 @@ import {
   type Alert,
   type EtaResult,
   type SimLive,
+  type SimOverrides,
   SimLive as SimLiveSchema,
 } from "../schemas/live.js";
 import { polylineLengthM, pointAtDistance, distanceAlongRoute, type LatLngTuple } from "./geo.js";
@@ -90,6 +91,8 @@ export function initSim(
         lat,
         lng,
         status: "RUNNING",
+        driverStatus: "RUNNING",
+        occupancy: 0.4,
         dwellRemainingSec: 0,
       });
     }
@@ -191,6 +194,9 @@ export function stepSim(state: SimState, dtSec: number, network: Network, hour =
       lat,
       lng,
       status: bus.status,
+      driverStatus: bus.driverStatus ?? "RUNNING",
+      occupancy: bus.occupancy ?? 0.4,
+      lastPingMs: bus.lastPingMs,
       dwellRemainingSec,
       lastDwellStopId,
     });
@@ -235,10 +241,55 @@ export function getSimLive(
       lat: b.lat,
       lng: b.lng,
       status: b.status,
+      driverStatus: b.driverStatus ?? "RUNNING",
+      occupancy: b.occupancy ?? 0.4,
+      lastPingMs: b.lastPingMs,
     })),
     etas,
     alerts,
     tick: state.tick,
     scenario: state.scenario,
   });
+}
+
+/**
+ * Merges operator overrides from sim/overrides into the simulation state (D9, M6b P2-24).
+ */
+export function applySimOverrides(state: SimState, overrides?: SimOverrides): SimState {
+  if (!overrides || Object.keys(overrides).length === 0) return state;
+
+  const updatedBuses = state.buses.map((bus) => {
+    const override = overrides[bus.id];
+    if (!override) return bus;
+
+    let status = bus.status;
+    let speedMps = bus.speedMps;
+    if (override.driverStatus === "STALLED" || override.driverStatus === "BREAK") {
+      status = "STALLED";
+      speedMps = 0;
+    } else if (override.driverStatus === "OUT_OF_SERVICE") {
+      status = "GHOST";
+      speedMps = 0;
+    } else if (override.driverStatus === "RUNNING") {
+      status = "RUNNING";
+    }
+
+    const lat = override.pingLat !== undefined ? override.pingLat : bus.lat;
+    const lng = override.pingLng !== undefined ? override.pingLng : bus.lng;
+
+    return {
+      ...bus,
+      lat,
+      lng,
+      status,
+      driverStatus: override.driverStatus,
+      speedMps,
+      lastPingMs: override.atMs,
+    };
+  });
+
+  return {
+    ...state,
+    buses: updatedBuses,
+  };
 }

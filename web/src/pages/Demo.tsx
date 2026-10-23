@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { useNetwork } from "../hooks/useNetwork";
 import { useOperator } from "../hooks/useOperator";
@@ -7,7 +7,9 @@ import {
   initSim,
   stepSim,
   getSimLive,
+  applySimOverrides,
   type SimState,
+  type SimOverrides,
   IncidentRunner,
   DEFAULT_INCIDENT_SCHEDULE,
   generateReplayTape,
@@ -43,6 +45,7 @@ export function DemoPage() {
 
   const [activeAlerts, setActiveAlerts] = useState<Alert[]>([]);
   const [replaySec, setReplaySec] = useState<number>(0);
+  const overridesRef = useRef<SimOverrides>({});
 
   const channelRef = useRef<BroadcastChannel | null>(null);
   const tabIdRef = useRef<string>(Math.random().toString(36).substring(2, 9));
@@ -50,6 +53,21 @@ export function DemoPage() {
   const incidentRunnerRef = useRef<IncidentRunner>(new IncidentRunner(DEFAULT_INCIDENT_SCHEDULE));
   const replayTapeRef = useRef<ReplayTape | null>(null);
   const replayControllerRef = useRef<ReplayController | null>(null);
+
+  // Subscribe to sim/overrides (Decision D9: presenter merges driver overrides on every tick)
+  useEffect(() => {
+    if (scenario !== "live") return;
+    try {
+      const unsub = onSnapshot(doc(db, "sim", "overrides"), (snap) => {
+        if (snap.exists()) {
+          overridesRef.current = snap.data() as SimOverrides;
+        }
+      });
+      return () => unsub();
+    } catch {
+      // offline fallback
+    }
+  }, [scenario]);
 
   // Single-tab guard (BroadcastChannel)
   useEffect(() => {
@@ -186,7 +204,9 @@ export function DemoPage() {
         setSimState(incidentState);
         setActiveAlerts(alerts);
 
-        const liveSnapshot = getSimLive(incidentState, hour, { routes, stops }, undefined, alerts);
+        // Apply operator overrides from sim/overrides before publishing sim/live (D9)
+        const stateWithOverrides = applySimOverrides(incidentState, overridesRef.current);
+        const liveSnapshot = getSimLive(stateWithOverrides, hour, { routes, stops }, undefined, alerts);
 
         // Write to Firestore sim/live doc ONLY in live scenario (M3-24, M3-26: zero writes in replay mode)
         if (scenario === "live") {

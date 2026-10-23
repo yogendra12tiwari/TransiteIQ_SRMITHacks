@@ -6,7 +6,8 @@ interface RequireOperatorProps {
 }
 
 export function RequireOperator({ children }: RequireOperatorProps) {
-  const { user, isOperator, loading, signInWithGoogle, signOutOperator } = useOperator();
+  const { user, isOperator, loading, signInWithGoogle, signInAsTestOperator, signOutOperator } =
+    useOperator();
 
   if (loading) {
     return (
@@ -35,6 +36,12 @@ export function RequireOperator({ children }: RequireOperatorProps) {
               Signed in as <span className="font-mono">{user.email}</span> (Missing operator claim)
             </p>
             <button
+              onClick={() => signInAsTestOperator?.()}
+              className="w-full py-2 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm font-medium transition text-white"
+            >
+              Sign in as Local Test Operator
+            </button>
+            <button
               onClick={() => signOutOperator()}
               className="w-full py-2 px-4 rounded-xl bg-slate-700 hover:bg-slate-600 text-sm font-medium transition"
             >
@@ -42,12 +49,20 @@ export function RequireOperator({ children }: RequireOperatorProps) {
             </button>
           </div>
         ) : (
-          <button
-            onClick={() => signInWithGoogle()}
-            className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition shadow-lg shadow-indigo-600/30 flex items-center justify-center space-x-2"
-          >
-            <span>Sign in with Google</span>
-          </button>
+          <div className="space-y-2.5">
+            <button
+              onClick={() => signInAsTestOperator?.()}
+              className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm transition shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2"
+            >
+              <span>Quick Sign In as Test Operator</span>
+            </button>
+            <button
+              onClick={() => signInWithGoogle()}
+              className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition shadow-lg shadow-indigo-600/30 flex items-center justify-center space-x-2"
+            >
+              <span>Sign in with Google</span>
+            </button>
+          </div>
         )}
       </div>
     );

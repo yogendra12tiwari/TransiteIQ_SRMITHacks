@@ -1,11 +1,21 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model & Architecture (ARCHITECTURE.md & PRD §7.2)
+    // ===============================================================
+    // 1. Public Read:  stops, routes, safeSpots, helpPoints, history, sim/live, alerts
+    // 2. Capability:   trips/{token} (get-only while expiresAt > request.time)
+    // 3. Operator:     sim/overrides, reports, clusters, aggregates, reviewQueue,
+    //                  incidents, routeScores, logs
+    // 4. Internal:     rateLimits/{sha256_hash} (default deny)
+    // ===============================================================
+
     function isOperator() {
       return request.auth != null && request.auth.token.role == "operator";
     }
 
-    // Static network data: public read, strictly immutable by clients
+    // Static network data & emergency help points: public read, strictly immutable by clients
     match /stops/{id} {
       allow read: if true;
       allow write: if false;
@@ -21,17 +31,28 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /helpPoints/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /history/{id} {
       allow read: if true;
       allow write: if false;
     }
 
-    // Live simulator state & alerts: public read, operator-only write
-    match /sim/{doc} {
+    // Live simulator state: public read, operator-only write
+    match /sim/live {
       allow read: if true;
       allow write: if isOperator();
     }
 
+    // Simulator driver overrides (PRD §7.2, D9): operator-only read & write
+    match /sim/overrides {
+      allow read, write: if isOperator();
+    }
+
+    // Alerts: public read, operator-only write
     match /alerts/{id} {
       allow read: if true;
       allow write: if isOperator();
@@ -91,9 +112,23 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Incidents and route reliability scores (ARCHITECTURE.md): operator-only read & write
+    match /incidents/{incidentId} {
+      allow read, write: if isOperator();
+    }
+
+    match /routeScores/{scoreId} {
+      allow read, write: if isOperator();
+    }
+
     match /logs/{logId} {
       allow read: if isOperator();
       allow write: if false;
+    }
+
+    // Internal rate limits: server-managed only (Decision D3, default deny)
+    match /rateLimits/{hash} {
+      allow read, write: if false;
     }
 
     // Default deny for all other collections until subsequent milestone rules are deployed
@@ -102,4 +137,3 @@ service cloud.firestore {
     }
   }
 }
-

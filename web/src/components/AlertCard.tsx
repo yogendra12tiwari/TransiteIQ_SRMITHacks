@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { AlertCircle, AlertTriangle, Clock, Bus } from "lucide-react";
-import type { Alert } from "@transitiq/shared";
+import { AlertCircle, AlertTriangle, Clock, Bus, XCircle } from "lucide-react";
+import type { Alert, AlertType } from "@transitiq/shared";
 import { Card } from "./primitives/Card";
 import { Badge } from "./primitives/Badge";
 
@@ -35,14 +35,19 @@ export function AlertCard({ alert, className = "", onClick }: AlertCardProps) {
     label: "Notice",
   };
 
-  const typeIcon = {
+  const typeIcon: Partial<Record<AlertType, React.ReactNode>> = {
     STALL: <Clock className="w-5 h-5 text-[#B91C1C]" aria-hidden="true" />,
     LIKELY_SKIP: <AlertTriangle className="w-5 h-5 text-[#B45309]" aria-hidden="true" />,
     GHOST_BUS: <Bus className="w-5 h-5 text-[#6D28D9]" aria-hidden="true" />,
     DELAY: <Clock className="w-5 h-5 text-[#0F5BD8]" aria-hidden="true" />,
     ROUTE_DEVIATION: <AlertCircle className="w-5 h-5 text-[#B45309]" aria-hidden="true" />,
     OVERCROWDING: <AlertCircle className="w-5 h-5 text-[#B45309]" aria-hidden="true" />,
-  }[alert.type] || <AlertCircle className="w-5 h-5 text-[#4B5563]" aria-hidden="true" />;
+    CANCELLATION: <XCircle className="w-5 h-5 text-[#B91C1C]" aria-hidden="true" />,
+    DIVERSION: <AlertTriangle className="w-5 h-5 text-[#B45309]" aria-hidden="true" />,
+    STOP_CLOSED: <XCircle className="w-5 h-5 text-[#B91C1C]" aria-hidden="true" />,
+    GPS_GAP: <Clock className="w-5 h-5 text-[#6D28D9]" aria-hidden="true" />,
+  };
+  const icon = typeIcon[alert.type] || <AlertCircle className="w-5 h-5 text-[#4B5563]" aria-hidden="true" />;
 
   const formattedType = alert.type.replace(/_/g, " ");
 
@@ -55,7 +60,7 @@ export function AlertCard({ alert, className = "", onClick }: AlertCardProps) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-[#F5F7FA] border border-[#D8DEE6] flex items-center justify-center shrink-0">
-            {typeIcon}
+            {icon}
           </div>
           <div>
             <h3 className="text-sm font-bold text-[#111827] capitalize">{formattedType}</h3>

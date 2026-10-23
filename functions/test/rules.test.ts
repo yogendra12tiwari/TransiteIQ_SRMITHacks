@@ -13,17 +13,19 @@ describe("Firestore Rules (PRD §7.2, M1-28 & M2-11)", () => {
     expect(rulesContent).toContain("rules_version = '2'");
   });
 
-  it("permits public read on stops, routes, safeSpots, history", () => {
+  it("permits public read on stops, routes, safeSpots, helpPoints, history", () => {
     expect(rulesContent).toMatch(/match\s+\/stops\/\{id\}\s*\{\s*allow read:\s*if true;/);
     expect(rulesContent).toMatch(/match\s+\/routes\/\{id\}\s*\{\s*allow read:\s*if true;/);
     expect(rulesContent).toMatch(/match\s+\/safeSpots\/\{id\}\s*\{\s*allow read:\s*if true;/);
+    expect(rulesContent).toMatch(/match\s+\/helpPoints\/\{id\}\s*\{\s*allow read:\s*if true;/);
     expect(rulesContent).toMatch(/match\s+\/history\/\{id\}\s*\{\s*allow read:\s*if true;/);
   });
 
-  it("denies client write on stops, routes, safeSpots, history", () => {
+  it("denies client write on stops, routes, safeSpots, helpPoints, history", () => {
     expect(rulesContent).toMatch(/match\s+\/stops\/\{id\}\s*\{[\s\S]*?allow write:\s*if false;/);
     expect(rulesContent).toMatch(/match\s+\/routes\/\{id\}\s*\{[\s\S]*?allow write:\s*if false;/);
     expect(rulesContent).toMatch(/match\s+\/safeSpots\/\{id\}\s*\{[\s\S]*?allow write:\s*if false;/);
+    expect(rulesContent).toMatch(/match\s+\/helpPoints\/\{id\}\s*\{[\s\S]*?allow write:\s*if false;/);
     expect(rulesContent).toMatch(/match\s+\/history\/\{id\}\s*\{[\s\S]*?allow write:\s*if false;/);
   });
 
@@ -33,13 +35,19 @@ describe("Firestore Rules (PRD §7.2, M1-28 & M2-11)", () => {
     );
   });
 
-  it("M2-11: permits public read and operator-only write on sim/{doc}", () => {
+  it("permits public read and operator-only write on sim/live", () => {
     expect(rulesContent).toMatch(
-      /match\s+\/sim\/\{doc\}\s*\{\s*allow read:\s*if true;\s*allow write:\s*if isOperator\(\);\s*\}/,
+      /match\s+\/sim\/live\s*\{\s*allow read:\s*if true;\s*allow write:\s*if isOperator\(\);\s*\}/,
     );
   });
 
-  it("M2-11: permits public read and operator-only write on alerts/{id}", () => {
+  it("permits operator-only read and write on sim/overrides (PRD §7.2, D9)", () => {
+    expect(rulesContent).toMatch(
+      /match\s+\/sim\/overrides\s*\{\s*allow read,\s*write:\s*if isOperator\(\);\s*\}/,
+    );
+  });
+
+  it("permits public read and operator-only write on alerts/{id}", () => {
     expect(rulesContent).toMatch(
       /match\s+\/alerts\/\{id\}\s*\{\s*allow read:\s*if true;\s*allow write:\s*if isOperator\(\);\s*\}/,
     );
@@ -99,9 +107,27 @@ describe("Firestore Rules (PRD §7.2, M1-28 & M2-11)", () => {
     );
   });
 
+  it("restricts /incidents/{incidentId} to operator read & write", () => {
+    expect(rulesContent).toMatch(
+      /match\s+\/incidents\/\{incidentId\}\s*\{\s*allow read,\s*write:\s*if isOperator\(\);\s*\}/,
+    );
+  });
+
+  it("restricts /routeScores/{scoreId} to operator read & write", () => {
+    expect(rulesContent).toMatch(
+      /match\s+\/routeScores\/\{scoreId\}\s*\{\s*allow read,\s*write:\s*if isOperator\(\);\s*\}/,
+    );
+  });
+
   it("M6-07: restricts /logs/{logId} to operator read and denies client writes", () => {
     expect(rulesContent).toMatch(
       /match\s+\/logs\/\{logId\}\s*\{\s*allow read:\s*if isOperator\(\);\s*allow write:\s*if false;\s*\}/,
+    );
+  });
+
+  it("denies client read & write on rateLimits/{hash}", () => {
+    expect(rulesContent).toMatch(
+      /match\s+\/rateLimits\/\{hash\}\s*\{\s*allow read,\s*write:\s*if false;\s*\}/,
     );
   });
 
@@ -110,7 +136,7 @@ describe("Firestore Rules (PRD §7.2, M1-28 & M2-11)", () => {
       return auth !== null && auth.token?.role === "operator";
     };
 
-    it("anonymous or unauthenticated users CANNOT read /reports, /clusters, /aggregates, /reviewQueue, /logs", () => {
+    it("anonymous or unauthenticated users CANNOT read /reports, /clusters, /aggregates, /reviewQueue, /logs, /incidents, /routeScores, /sim/overrides", () => {
       const unauthenticated = null;
       const anonymousUser = { uid: "anon-42", token: { provider_id: "anonymous" } };
       const commuterUser = { uid: "commuter-99", token: { role: "commuter" } };
@@ -120,15 +146,15 @@ describe("Firestore Rules (PRD §7.2, M1-28 & M2-11)", () => {
       expect(isOperatorEval(commuterUser)).toBe(false);
     });
 
-    it("operators CAN read /reports, /clusters, /aggregates, /reviewQueue, /logs", () => {
+    it("operators CAN read /reports, /clusters, /aggregates, /reviewQueue, /logs, /incidents, /routeScores, /sim/overrides", () => {
       const operatorUser = { uid: "operator-admin", token: { role: "operator" } };
       expect(isOperatorEval(operatorUser)).toBe(true);
     });
 
-    it("regular clients cannot create or write to /reports, /clusters, /aggregates, /logs", () => {
-      // Writes are denied (`allow write: if false;`) regardless of auth state
-      const isWritePermitted = false;
-      expect(isWritePermitted).toBe(false);
+    it("regular clients cannot create or write to /reports, /clusters, /aggregates, /logs, /incidents, /routeScores, /sim/overrides", () => {
+      // Writes are denied (`allow write: if false;` or required `isOperator()`) regardless of commuter auth state
+      const commuterUser = { uid: "commuter-99", token: { role: "commuter" } };
+      expect(isOperatorEval(commuterUser)).toBe(false);
     });
 
     it("operator can update /reviewQueue/{id} (e.g. review triage), but cannot create or delete", () => {

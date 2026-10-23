@@ -19,6 +19,7 @@
     "lint": "eslint .",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
+    "emulators": "firebase emulators:start",
     "verify:seed": "tsx scripts/verify-seed.ts",
     "verify:demo": "tsx scripts/verify-demo.ts",
     "seed:emulator": "tsx functions/src/scripts/seedFirestore.ts",

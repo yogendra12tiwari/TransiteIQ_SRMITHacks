@@ -13,6 +13,33 @@ export interface NetworkContext {
   routes: Route[];
 }
 
+/**
+ * Calculates distance-slab fare estimate (₹) per Route.fare config (M6b P2-07).
+ */
+export function calculateFare(route: Route, transitDistM: number): number {
+  const fare = route.fare ?? { baseInr: 10, perKmInr: 2, minInr: 10 };
+  const km = Math.max(1, Math.round(transitDistM / 1000));
+  return Math.max(fare.minInr, fare.baseInr + km * fare.perKmInr);
+}
+
+/**
+ * Estimates bus occupancy / crowding per route and hour (M6b P2-10).
+ */
+export function estimateCrowding(_routeId: string, hour: number): "low" | "medium" | "high" {
+  const isPeak = (hour >= 8 && hour <= 10) || (hour >= 17 && hour <= 20);
+  if (isPeak) return "high";
+  if (hour >= 11 && hour <= 16) return "medium";
+  return "low";
+}
+
+/**
+ * Predicts delay risk from current wait and time of day (M6b P2-08).
+ */
+export function predictDelayRisk(_route: Route, waitMin: number, hour: number): "on_time" | "delayed" {
+  const isEveningPeak = hour >= 17 && hour <= 21;
+  return isEveningPeak && waitMin > 10 ? "delayed" : "on_time";
+}
+
 export const INTERCHANGE_STOP_IDS = ["stop_hazratganj", "stop_aminabad", "stop_charbagh"];
 
 /**
@@ -225,6 +252,12 @@ export function planRoutes(params: PlanOptionsParams): RouteOption[] {
             [destination.lat, destination.lng],
           ];
 
+          const numStops = Math.max(1, alightIdx - boardIdx);
+          const transitDistM = numStops * 1800;
+          const fareInr = calculateFare(route, transitDistM);
+          const crowding = estimateCrowding(route.id, hour);
+          const delayRisk = predictDelayRisk(route, waitMin, hour);
+
           rawOptions.push({
             id: `direct_${route.id}_${boardStop.id}_${alightStop.id}`,
             label: "Fastest", // temporary, re-labeled in rankOptions
@@ -242,6 +275,9 @@ export function planRoutes(params: PlanOptionsParams): RouteOption[] {
             riskLabel: riskInfo.label,
             polyline,
             cost: 0,
+            fareInr,
+            crowding,
+            delayRisk,
           });
         }
       });
@@ -300,6 +336,12 @@ export function planRoutes(params: PlanOptionsParams): RouteOption[] {
                 [destination.lat, destination.lng],
               ];
 
+              const transitDistM = Math.max(3000, (x1Idx - bIdx + (aIdx - x2Idx)) * 1800);
+              const fareInr =
+                calculateFare(route1, transitDistM / 2) + calculateFare(route2, transitDistM / 2);
+              const crowding = estimateCrowding(route1.id, hour);
+              const delayRisk = predictDelayRisk(route1, waitMin, hour);
+
               rawOptions.push({
                 id: `transfer_${route1.id}_${route2.id}_${boardStop.id}_${alightStop.id}`,
                 label: "Balanced",
@@ -318,6 +360,9 @@ export function planRoutes(params: PlanOptionsParams): RouteOption[] {
                 riskLabel: riskInfo.label,
                 polyline,
                 cost: 0,
+                fareInr,
+                crowding,
+                delayRisk,
               });
             });
           });

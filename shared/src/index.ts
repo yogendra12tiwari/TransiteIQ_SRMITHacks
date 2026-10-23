@@ -26,6 +26,7 @@ export * from "./engine/planner.js";
 export * from "./engine/tripMachine.js";
 export * from "./engine/safewait.js";
 export * from "./engine/recommendations.js";
+export * from "./engine/reliability.js";
 
 // Guardrails & i18n
 export * from "./guard/bannedPhrases.js";

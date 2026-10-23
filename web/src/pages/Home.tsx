@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Search, MapPin, Clock } from "lucide-react";
 import type { Bus, Stop } from "@transitiq/shared";
@@ -58,12 +58,45 @@ export function HomePage() {
     (a) => a.type === "LIKELY_SKIP" && (a.affectedStopIds.includes("stop_A") || a.affectedStopIds.length > 0),
   );
 
+  const hour = liveData?.hour ?? new Date().getHours();
+  const isEvening = hour >= 19 || hour < 6;
+
   const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (searchValue.trim()) {
-      navigate(`/plan?to=${encodeURIComponent(searchValue.trim())}`);
-    } else {
+    const query = searchValue.trim();
+    if (!query) {
       navigate("/plan");
+      return;
+    }
+
+    // Bus search by number (F11 / P2-03)
+    const busNumMatch = query.match(/\b(23|7|41|11)\b/i);
+    if (busNumMatch && busNumMatch[1]) {
+      const num = busNumMatch[1];
+      const matchedRoute = routes.find((r) => r.id.includes(num) || r.name.includes(num));
+      const matchedBus = buses.find((b) => b.routeId.includes(num) || b.id.includes(num));
+      if (matchedBus) {
+        setSelectedBus(matchedBus);
+        setSelectedStop(null);
+        return;
+      }
+      if (matchedRoute) {
+        navigate(`/route/${matchedRoute.id}`);
+        return;
+      }
+    }
+
+    navigate(`/plan?to=${encodeURIComponent(query)}`);
+  };
+
+  const handleQuickBusSelect = (busNum: string) => {
+    const matchedBus = buses.find((b) => b.routeId.includes(busNum) || b.id.includes(busNum));
+    const matchedRoute = routes.find((r) => r.id.includes(busNum) || r.name.includes(busNum));
+    if (matchedBus) {
+      setSelectedBus(matchedBus);
+      setSelectedStop(null);
+    } else if (matchedRoute) {
+      navigate(`/route/${matchedRoute.id}`);
     }
   };
 
@@ -114,6 +147,29 @@ export function HomePage() {
                 className="text-xs font-bold underline cursor-pointer text-[#B91C1C]"
               >
                 {t("common.continue", "See options")}
+              </button>
+            }
+          />
+        </div>
+      )}
+
+      {/* Time-Aware Evening Safety Notice (F24 / P2-12) */}
+      {isEvening && (
+        <div data-testid="evening-safety-banner" className="z-30 px-3 pt-2">
+          <Banner
+            variant="warning"
+            title={
+              lang === "hi"
+                ? "शाम की सुरक्षा सूचना: शांत स्टॉप पर बस प्रतीक्षा 18 मिनट तक हो सकती है। सुरक्षित रूट का उपयोग करें।"
+                : "Evening safety notice: Bus waits average 18 min at quiet stops. Safer Route recommended."
+            }
+            action={
+              <button
+                type="button"
+                onClick={() => navigate("/plan?pref=safer")}
+                className="text-xs font-bold underline cursor-pointer text-[#B45309]"
+              >
+                {lang === "hi" ? "सुरक्षित रूट देखें" : "Plan Safer Route"}
               </button>
             }
           />
@@ -301,6 +357,25 @@ export function HomePage() {
             </div>
           </form>
 
+          {/* Quick Bus Number Tracking Chips (F11 / P2-03) */}
+          <div>
+            <span className="text-xs font-semibold text-[#4B5563] block mb-1.5">
+              {lang === "hi" ? "बस नंबर से ट्रैक करें" : "Track by bus number"}
+            </span>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {["23", "7", "41", "11"].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => handleQuickBusSelect(num)}
+                  className="min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-[#D8DEE6] text-[#0F5BD8] hover:bg-blue-50 cursor-pointer transition-colors"
+                >
+                  Bus {num}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Popular / Recent Destinations Chips */}
           <div>
             <span className="text-xs font-semibold text-[#4B5563] block mb-1.5">
@@ -335,7 +410,37 @@ export function HomePage() {
             </div>
           </div>
 
-          {/* Map accessibility alternative toggle (U1-05) */}
+          {/* Stops Near You in Sheet (F12 / P2-04) */}
+          {viewMode === "map" && (
+            <div className="pt-2 border-t border-[#D8DEE6]">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-semibold text-[#4B5563]">
+                  {lang === "hi" ? "आपके निकटतम स्टॉप" : "Stops near you"}
+                </span>
+                <span className="text-[10px] text-[#4B5563]">Lucknow Demo</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {stops.slice(0, 2).map((st) => (
+                  <button
+                    key={st.id}
+                    type="button"
+                    onClick={() => navigate(`/stop/${st.id}`)}
+                    className="p-2.5 bg-white border border-[#D8DEE6] rounded-xl text-left hover:border-[#0F5BD8] transition-colors cursor-pointer"
+                  >
+                    <div className="font-bold text-xs text-[#111827] truncate">
+                      {lang === "hi" && st.nameHi ? st.nameHi : st.name}
+                    </div>
+                    <div className="text-[11px] text-[#0F5BD8] font-medium flex items-center gap-1 mt-0.5">
+                      <Clock className="w-3 h-3" aria-hidden="true" />
+                      <span>{lang === "hi" ? "समय सारिणी →" : "Timetable →"}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Map accessibility alternative toggle & emergency link (U1-05, F25) */}
           <div className="pt-2 border-t border-[#D8DEE6] flex items-center justify-between">
             <button
               type="button"
@@ -346,9 +451,12 @@ export function HomePage() {
               {viewMode === "map" ? t("home.listView", "List view") : t("home.mapView", "Map view")}
             </button>
 
-            <span className="text-[11px] text-[#4B5563]">
-              {buses.length > 0 ? `${buses.length} buses live` : "Tracking Lucknow fleet"}
-            </span>
+            <Link
+              to="/help"
+              className="text-xs text-rose-700 font-bold hover:underline min-h-[48px] flex items-center"
+            >
+              {lang === "hi" ? "सहायता / 112" : "Help / 112"}
+            </Link>
           </div>
         </div>
       </Sheet>

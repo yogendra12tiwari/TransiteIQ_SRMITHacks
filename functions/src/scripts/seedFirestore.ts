@@ -14,6 +14,8 @@ export interface SeedResult {
   historyCount: number;
   reportsCount: number;
   aggregatesCount: number;
+  helpPointsCount?: number;
+  incidentsCount?: number;
 }
 
 function getCliAccessToken(): string | null {
@@ -101,6 +103,29 @@ export async function seedFirestore(options?: { isDryRun?: boolean }): Promise<S
     createdAt: number;
     [k: string]: unknown;
   }>;
+  const helpPointsPath = path.join(seedDir, "helpPoints.json");
+  const helpPoints = fs.existsSync(helpPointsPath)
+    ? (JSON.parse(fs.readFileSync(helpPointsPath, "utf-8")) as Array<{ id: string; [k: string]: unknown }>)
+    : [];
+  const incidentsPath = path.join(seedDir, "incidents.json");
+  const rawIncidents = fs.existsSync(incidentsPath)
+    ? JSON.parse(fs.readFileSync(incidentsPath, "utf-8"))
+    : { events: [] };
+  const incidents: Array<{ id: string; [k: string]: unknown }> = Array.isArray(rawIncidents)
+    ? rawIncidents
+    : (rawIncidents.events || []).map((e: Record<string, unknown>, idx: number) => {
+        const item: Record<string, unknown> = {
+          id: `inc_${String(idx + 1).padStart(3, "0")}`,
+          kind: "alert",
+          refId: (e.busId as string) || (e.routeId as string) || `event_${idx + 1}`,
+          status: "NEW",
+          note: (e.description as string) || "",
+          updatedAt: Date.now(),
+        };
+        if (e.stopId) item.stopId = e.stopId;
+        if (e.routeId) item.routeId = e.routeId;
+        return item;
+      });
 
   if (options?.isDryRun) {
     return {
@@ -110,6 +135,8 @@ export async function seedFirestore(options?: { isDryRun?: boolean }): Promise<S
       historyCount: Object.keys(history).length,
       reportsCount: reports.length,
       aggregatesCount: stops.length,
+      helpPointsCount: helpPoints.length,
+      incidentsCount: incidents.length,
     };
   }
 
@@ -210,6 +237,16 @@ export async function seedFirestore(options?: { isDryRun?: boolean }): Promise<S
       cliToken,
     );
 
+    // 6. Help points
+    for (const hp of helpPoints) {
+      await writeDocRest(projectId, `helpPoints/${hp.id}`, hp, cliToken);
+    }
+
+    // 7. Incidents
+    for (const inc of incidents) {
+      await writeDocRest(projectId, `incidents/${inc.id}`, inc, cliToken);
+    }
+
     return {
       stopsCount: stops.length,
       routesCount: routes.length,
@@ -217,6 +254,8 @@ export async function seedFirestore(options?: { isDryRun?: boolean }): Promise<S
       historyCount: Object.keys(history).length,
       reportsCount: reports.length,
       aggregatesCount: stops.length,
+      helpPointsCount: helpPoints.length,
+      incidentsCount: incidents.length,
     };
   }
 
@@ -225,6 +264,7 @@ export async function seedFirestore(options?: { isDryRun?: boolean }): Promise<S
     admin.initializeApp({ projectId });
   }
   const db = admin.firestore() as unknown as Firestore;
+  db.settings({ ignoreUndefinedProperties: true });
 
   let batch = db.batch();
   let count = 0;
@@ -326,6 +366,24 @@ export async function seedFirestore(options?: { isDryRun?: boolean }): Promise<S
     }
   }
 
+  for (const hp of helpPoints) {
+    batch.set(db.collection("helpPoints").doc(hp.id), hp);
+    count++;
+    if (count % 400 === 0) {
+      await batch.commit();
+      batch = db.batch();
+    }
+  }
+
+  for (const inc of incidents) {
+    batch.set(db.collection("incidents").doc(inc.id), inc);
+    count++;
+    if (count % 400 === 0) {
+      await batch.commit();
+      batch = db.batch();
+    }
+  }
+
   batch.set(db.collection("sim").doc("live"), {
     simTimeMs: Date.now(),
     hour: 20,
@@ -345,6 +403,8 @@ export async function seedFirestore(options?: { isDryRun?: boolean }): Promise<S
     historyCount: Object.keys(history).length,
     reportsCount: reports.length,
     aggregatesCount: stops.length,
+    helpPointsCount: helpPoints.length,
+    incidentsCount: incidents.length,
   };
 }
 
@@ -367,6 +427,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       console.log(`  History docs: ${result.historyCount}`);
       console.log(`  Reports: ${result.reportsCount}`);
       console.log(`  Aggregates: ${result.aggregatesCount}`);
+      console.log(`  HelpPoints: ${result.helpPointsCount}`);
+      console.log(`  Incidents: ${result.incidentsCount}`);
       process.exit(0);
     })
     .catch((err) => {

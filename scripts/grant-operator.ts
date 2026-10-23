@@ -79,7 +79,9 @@ async function setCustomClaimRest(
 }
 
 export async function grantOperator(): Promise<void> {
-  const emailsStr = process.env.OPERATOR_EMAILS;
+  const isEmulator = Boolean(process.env.FIREBASE_AUTH_EMULATOR_HOST || process.env.FIRESTORE_EMULATOR_HOST);
+  const emailsStr =
+    process.env.OPERATOR_EMAILS || (isEmulator ? "operator@transitiq.local,admin@transitiq.local" : "");
   if (!emailsStr) {
     console.error("Error: OPERATOR_EMAILS environment variable must be provided (comma-separated list).");
     process.exit(1);
@@ -107,7 +109,18 @@ export async function grantOperator(): Promise<void> {
 
   for (const email of emails) {
     try {
-      const user = await admin.auth().getUserByEmail(email);
+      let user;
+      try {
+        user = await admin.auth().getUserByEmail(email);
+      } catch {
+        user = await admin.auth().createUser({
+          email,
+          emailVerified: true,
+          displayName: "TransitIQ Operator",
+          password: "password123",
+        });
+        console.log(`Created test operator account for ${email} (UID: ${user.uid})`);
+      }
       await admin.auth().setCustomUserClaims(user.uid, { role: "operator" });
       console.log(`Granted operator role to ${email} (UID: ${user.uid})`);
     } catch (err: unknown) {
